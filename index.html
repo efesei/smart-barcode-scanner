@@ -6,13 +6,25 @@
   <title>Smart Barcode Scanner</title>
   <link rel="manifest" href="manifest.json" />
   <meta name="theme-color" content="#0066cc" />
+  <!-- Add iOS meta tags for better mobile experience -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Barcode Scanner">
+  <link rel="apple-touch-icon" href="icons/icon-192x192.png">
   <style>
+    /* Your existing CSS remains the same */
     body {
       font-family: Arial, sans-serif;
       text-align: center;
       margin: 0;
       padding: 1rem;
       background: #f5f5f5;
+      -webkit-touch-callout: none;
+      -webkit-user-select: none;
+      -khtml-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
     }
     
     .video-container {
@@ -110,6 +122,7 @@
       background: #0066cc;
       color: white;
       cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
     }
     button:disabled {
       background: #aaa;
@@ -308,6 +321,11 @@
     <div class="json-output" id="jsonOutput"></div>
   </div>
 
+  <!-- Audio element for beep sound (more reliable than Web Audio API) -->
+  <audio id="beepSound" preload="auto">
+    <source src="data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA==" type="audio/wav">
+  </audio>
+
   <script src="https://unpkg.com/@zxing/library@latest"></script>
   <script>
     const videoElem = document.getElementById("video");
@@ -323,6 +341,7 @@
     const scannedDataOverlay = document.getElementById("scannedDataOverlay");
     const jsonOutput = document.getElementById("jsonOutput");
     const clearAllBtn = document.getElementById("clearAllBtn");
+    const beepSound = document.getElementById("beepSound");
 
     let scanning = false;
     let scanQueue = JSON.parse(localStorage.getItem("scanQueue") || "[]");
@@ -331,23 +350,42 @@
     let videoStream = null;
     let restartTimeout = null;
 
-    // Create barcode scanner beep sound
-    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    // Create a more reliable beep sound using both methods
     function playBeep() {
-      const oscillator = audioContext.createOscillator();
-      const gainNode = audioContext.createGain();
-      
-      oscillator.connect(gainNode);
-      gainNode.connect(audioContext.destination);
-      
-      oscillator.frequency.value = 2000;
-      oscillator.type = 'square';
-      
-      gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
-      
-      oscillator.start(audioContext.currentTime);
-      oscillator.stop(audioContext.currentTime + 0.1);
+      // Try using the audio element first (more reliable on mobile)
+      try {
+        beepSound.currentTime = 0;
+        beepSound.play().catch(e => {
+          console.log("Audio element beep failed, trying Web Audio API");
+          playWebAudioBeep();
+        });
+      } catch (e) {
+        console.log("Audio element beep failed, trying Web Audio API");
+        playWebAudioBeep();
+      }
+    }
+
+    function playWebAudioBeep() {
+      // Fallback to Web Audio API
+      try {
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        
+        oscillator.frequency.value = 800;
+        oscillator.type = 'sine';
+        
+        gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+        
+        oscillator.start(audioContext.currentTime);
+        oscillator.stop(audioContext.currentTime + 0.1);
+      } catch (e) {
+        console.error("Both audio methods failed:", e);
+      }
     }
 
     // Request notification permission
@@ -563,7 +601,7 @@
               startBtn.style.display = "inline-block";
               stopBtn.style.display = "none";
               statusElem.textContent = "Tap 'Start Scanner' to scan next item.";
-            }, 3000);
+            }, 2000);
           }
           
           if (err && !(err instanceof ZXing.NotFoundException)) {
@@ -609,12 +647,14 @@
       statusElem.textContent = "Tap 'Start Scanner' to scan next item.";
     }
 
+    // Enhanced PWA features
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker.register("service-worker.js")
         .then((reg) => console.log("Service Worker Registered", reg))
         .catch(() => console.warn("Service worker registration failed"));
     }
 
+    // Enhanced install prompt
     window.addEventListener("beforeinstallprompt", (e) => {
       e.preventDefault();
       const installBtn = document.createElement("button");
@@ -631,7 +671,8 @@
         padding:"10px 20px",
         fontSize:"16px",
         cursor:"pointer",
-        zIndex:"9999"
+        zIndex:"9999",
+        boxShadow: "0 4px 12px rgba(0,0,0,0.3)"
       });
       document.body.appendChild(installBtn);
       installBtn.addEventListener("click", async () => {
@@ -642,6 +683,16 @@
         else showNotification("ℹ️ Installation cancelled");
       });
     });
+
+    // Prevent zoom on double-tap (better mobile experience)
+    let lastTouchEnd = 0;
+    document.addEventListener('touchend', function (event) {
+      const now = (new Date()).getTime();
+      if (now - lastTouchEnd <= 300) {
+        event.preventDefault();
+      }
+      lastTouchEnd = now;
+    }, false);
 
     renderJsonOutput();
   </script>
