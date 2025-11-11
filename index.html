@@ -329,6 +329,7 @@
     let webhookUrl = localStorage.getItem("webhookUrl") || "";
     let codeReader = null;
     let videoStream = null;
+    let restartTimeout = null;
 
     // Create barcode scanner beep sound
     const audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -519,9 +520,14 @@
           if (result && scanning) {
             const code = result.text;
             
-            // Immediately stop scanning
+            // Immediately stop scanning completely
             scanning = false;
             scanLine.classList.add("paused");
+            
+            // Stop the ZXing decoder
+            if (codeReader) {
+              codeReader.reset();
+            }
             
             scannedDataOverlay.textContent = code;
             scannedDataOverlay.classList.add("show");
@@ -546,21 +552,18 @@
               await sendPendingScans();
             }
             
-            // Reset after 3 seconds
-            setTimeout(() => {
-              scannedDataOverlay.classList.remove("show");
-              if (scanning) {
-                scanLine.classList.remove("paused");
-              }
-            }, 3000);
+            // Clear any existing restart timeout
+            if (restartTimeout) {
+              clearTimeout(restartTimeout);
+            }
             
-            // Restart scanning after a brief pause
-            setTimeout(() => {
-              if (scanning) {
-                scanLine.classList.remove("paused");
-                statusElem.textContent = "Camera ready. Point at barcode...";
-              }
-            }, 3500);
+            // Set up auto-restart after 3 seconds
+            restartTimeout = setTimeout(() => {
+              scannedDataOverlay.classList.remove("show");
+              startBtn.style.display = "inline-block";
+              stopBtn.style.display = "none";
+              statusElem.textContent = "Tap 'Start Scanner' to scan next item.";
+            }, 3000);
           }
           
           if (err && !(err instanceof ZXing.NotFoundException)) {
@@ -582,6 +585,12 @@
       scanning = false;
       startBtn.style.display = "inline-block";
       stopBtn.style.display = "none";
+      
+      // Clear any pending restart timeout
+      if (restartTimeout) {
+        clearTimeout(restartTimeout);
+        restartTimeout = null;
+      }
       
       if (codeReader) {
         codeReader.reset();
