@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Smart Barcode Scanner</title>
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#0066cc" />
+  <style>
+    body {font-family: Arial, sans-serif;text-align: center;margin: 0;padding: 1rem;background: #f5f5f5;}
+    
+    .video-container {
+      position: relative;
+      width: 100%;
+      max-width: 400px;
+      margin: 1rem auto;
+      border-radius: 10px;
+      overflow: hidden;
+      background: #000;
+    }
+    
+    video {
+      width: 100%;
+      display: none;
+      border-radius: 10px;
+    }
+    video.active {display: block;}
+    
+    .scan-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      pointer-events: none;
+      display: none;
+    }
+    
+    .scan-overlay.active {display: block;}
+    
+    .scan-line {
+      position: absolute;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, transparent, #ff0000, transparent);
+      box-shadow: 0 0 10px #ff0000, 0 0 20px #ff0000;
+      animation: scan 2s linear infinite;
+    }
+    
+    @keyframes scan {
+      0% { top: 0%; }
+      50% { top: 100%; }
+      100% { top: 0%; }
+    }
+    
+    .scanned-data-overlay {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(0, 102, 204, 0.95);
+      color: white;
+      padding: 15px;
+      font-size: 14px;
+      font-weight: bold;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+      max-height: 40%;
+      overflow-y: auto;
+      display: none;
+      animation: slideUp 0.3s ease-out;
+    }
+    
+    .scanned-data-overlay.show {display: block;}
+    
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    button {margin-top: 1rem;padding: 10px 20px;font-size: 16px;border: none;border-radius: 6px;background: #0066cc;color: white;cursor: pointer;}
+    button:disabled {background: #aaa;cursor: not-allowed;}
+    button.stop {background: #e74c3c;}
+    #settings {margin-top: 1.5rem;text-align: left;max-width: 400px;margin-inline: auto;background: white;padding: 1rem;border-radius: 8px;box-shadow: 0 2px 5px rgba(0,0,0,0.1);}
+    #history {margin-top: 1.5rem;text-align: left;max-width: 400px;margin-inline: auto;background: white;padding: 1rem;border-radius: 8px;box-shadow: 0 2px 5px rgba(0,0,0,0.1);}
+    
+    .json-output {
+      background: #1e1e1e;
+      color: #d4d4d4;
+      padding: 10px;
+      border-radius: 6px;
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      text-align: left;
+      overflow-x: auto;
+      max-height: 300px;
+      overflow-y: auto;
+      margin-top: 10px;
+    }
+    
+    .json-item {
+      margin-bottom: 10px;
+      padding: 8px;
+      background: #2d2d2d;
+      border-left: 3px solid #0066cc;
+      border-radius: 4px;
+    }
+    
+    .json-key {color: #9cdcfe;}
+    .json-string {color: #ce9178;}
+    .json-number {color: #b5cea8;}
+    
+    input[type="text"] {width: 100%;padding: 8px;border: 1px solid #ddd;border-radius: 4px;font-size: 14px;box-sizing: border-box;}
+    label {display: block;margin-bottom: 5px;font-weight: bold;color: #333;}
+    .settings-group {margin-bottom: 1rem;}
+    .status-indicator {display: inline-block;width: 10px;height: 10px;border-radius: 50%;margin-left: 8px;}
+    .status-indicator.online {background: #00b894;}
+    .status-indicator.offline {background: #d63031;}
+    
+    .notification {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #00b894;
+      color: white;
+      padding: 15px 25px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      z-index: 10000;
+      animation: slideDown 0.3s ease-out;
+      max-width: 90%;
+      text-align: center;
+    }
+    .notification.error {background: #e74c3c;}
+    
+    @keyframes slideDown {
+      from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(-20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+      }
+    }
+  </style>
+</head>
+<body>
+  <h2>📦 Smart Barcode Scanner</h2>
+  
+  <div id="settings">
+    <h3>⚙️ Settings</h3>
+    <div class="settings-group">
+      <label for="webhookUrl">Webhook URL:</label>
+      <input type="text" id="webhookUrl" placeholder="https://your-webhook-url.com/endpoint" />
+    </div>
+    <button id="saveSettings">💾 Save Settings</button>
+  </div>
+
+  <div class="video-container">
+    <video id="video" playsinline autoplay></video>
+    <div class="scan-overlay" id="scanOverlay">
+      <div class="scan-line"></div>
+    </div>
+    <div class="scanned-data-overlay" id="scannedDataOverlay"></div>
+  </div>
+  
+  <p id="status">Configure webhook URL and tap "Start Scanner" to begin.<span class="status-indicator" id="onlineStatus"></span></p>
+  <button id="startBtn">📷 Start Scanner</button>
+
+  <div id="history">
+    <h3>📋 Scan History <span style="font-size:12px;font-weight:normal;">(Pending: <span id="pendingCount">0</span>)</span></h3>
+    <div class="json-output" id="jsonOutput"></div>
+  </div>
+
+  <script src="https://unpkg.com/@zxing/library@latest"></script>
+  <script>
+    const videoElem = document.getElementById("video");
+    const statusElem = document.getElementById("status");
+    const startBtn = document.getElementById("startBtn");
+    const webhookUrlInput = document.getElementById("webhookUrl");
+    const saveSettingsBtn = document.getElementById("saveSettings");
+    const onlineStatus = document.getElementById("onlineStatus");
+    const pendingCountElem = document.getElementById("pendingCount");
+    const scanOverlay = document.getElementById("scanOverlay");
+    const scannedDataOverlay = document.getElementById("scannedDataOverlay");
+    const jsonOutput = document.getElementById("jsonOutput");
+
+    let scanning = false;
+    let scanQueue = JSON.parse(localStorage.getItem("scanQueue") || "[]");
+    let webhookUrl = localStorage.getItem("webhookUrl") || "";
+    let codeReader = null;
+    let videoStream = null;
+
+    // Create barcode scanner beep sound
+    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    function playBeep() {
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      
+      oscillator.frequency.value = 2000;
+      oscillator.type = 'square';
+      
+      gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+      
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + 0.1);
+    }
+
+    // Request notification permission
+    if ("Notification" in window && Notification.permission === "default") {
+      Notification.requestPermission();
+    }
+
+    // Load saved webhook URL
+    webhookUrlInput.value = webhookUrl;
+
+    // Update online status
+    function updateOnlineStatus() {
+      onlineStatus.className = "status-indicator " + (navigator.onLine ? "online" : "offline");
+    }
+    updateOnlineStatus();
+    window.addEventListener("online", updateOnlineStatus);
+    window.addEventListener("offline", updateOnlineStatus);
+
+    // Save settings button
+    saveSettingsBtn.addEventListener("click", () => {
+      const newUrl = webhookUrlInput.value.trim();
+      webhookUrl = newUrl;
+      localStorage.setItem("webhookUrl", newUrl);
+      showNotification("✅ Settings saved!", false);
+      console.log("Webhook URL saved:", newUrl);
+    });
+
+    function renderJsonOutput() {
+      jsonOutput.innerHTML = "";
+      const pending = scanQueue.filter(item => !item.sent).length;
+      pendingCountElem.textContent = pending;
+      
+      scanQueue.slice(-10).reverse().forEach((item) => {
+        const jsonItem = document.createElement("div");
+        jsonItem.className = "json-item";
+        
+        const jsonText = JSON.stringify({
+          barcode_data: item.barcode_data,
+          timestamp: item.timestamp,
+          code_type: item.code_type || "unknown",
+          status: item.sent ? "sent" : "pending"
+        }, null, 2);
+        
+        const formatted = jsonText
+          .replace(/"([^"]+)":/g, '<span class="json-key">"$1"</span>:')
+          .replace(/: "([^"]+)"/g, ': <span class="json-string">"$1"</span>')
+          .replace(/: (\d+)/g, ': <span class="json-number">$1</span>');
+        
+        jsonItem.innerHTML = formatted;
+        jsonOutput.appendChild(jsonItem);
+      });
+    }
+
+    function saveQueue() { 
+      localStorage.setItem("scanQueue", JSON.stringify(scanQueue)); 
+      renderJsonOutput();
+    }
+
+    async function sendPendingScans() {
+      if (!navigator.onLine || scanQueue.length === 0 || !webhookUrl) return;
+      
+      const unsent = scanQueue.filter(item => !item.sent);
+      for (const item of unsent) {
+        try {
+          const payload = {
+            barcode_data: item.barcode_data,
+            timestamp: item.timestamp,
+            scanned_at: item.timestamp,
+            code_type: item.code_type || "unknown"
+          };
+
+          console.log("Sending to webhook:", JSON.stringify(payload, null, 2));
+
+          const res = await fetch(webhookUrl, {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify(payload)
+          });
+          
+          console.log("Webhook response:", res.status, res.statusText);
+          
+          if (res.ok) {
+            item.sent = true;
+            saveQueue();
+          }
+        } catch (err) { 
+          console.error("Send error:", err); 
+          break; 
+        }
+      }
+    }
+
+    window.addEventListener("online", sendPendingScans);
+
+    function showNotification(message, isError = false) {
+      if ("Notification" in window && Notification.permission === "granted") {
+        new Notification("Barcode Scanner", {
+          body: message,
+          icon: "https://cdn-icons-png.flaticon.com/512/864/864685.png"
+        });
+      }
+
+      const notif = document.createElement("div");
+      notif.className = "notification" + (isError ? " error" : "");
+      notif.textContent = message;
+      document.body.appendChild(notif);
+      setTimeout(() => notif.remove(), 3000);
+    }
+
+    startBtn.addEventListener("click", async () => {
+      if (scanning) return;
+      
+      if (!webhookUrl) {
+        showNotification("⚠️ Please configure webhook URL first!", true);
+        return;
+      }
+
+      scanning = true;
+      startBtn.disabled = true;
+      startBtn.textContent = "🔄 Scanning...";
+      statusElem.textContent = "Requesting camera access...";
+
+      try {
+        videoStream = await navigator.mediaDevices.getUserMedia({ 
+          video: { facingMode: "environment" } 
+        });
+        
+        videoElem.srcObject = videoStream;
+        videoElem.classList.add("active");
+        scanOverlay.classList.add("active");
+        
+        statusElem.textContent = "Camera ready. Point at barcode...";
+
+        codeReader = new ZXing.BrowserMultiFormatReader();
+        
+        codeReader.decodeFromVideoDevice(undefined, 'video', async (result, err) => {
+          if (result && scanning) {
+            const code = result.text;
+
+            scannedDataOverlay.textContent = code;
+            scannedDataOverlay.classList.add("show");
+
+            const data = {
+              barcode_data: code,
+              timestamp: new Date().toISOString(),
+              code_type: result.format || "unknown",
+              sent: false
+            };
+            
+            statusElem.textContent = `✅ Scan Complete!`;
+            
+            playBeep();
+            
+            showNotification(`✅ Barcode Scanned!\n${code.substring(0, 50)}${code.length > 50 ? '...' : ''}`);
+            
+            scanQueue.push(data);
+            saveQueue();
+            
+            if (navigator.onLine && webhookUrl) {
+              await sendPendingScans();
+            }
+            
+            setTimeout(() => {
+              stopScanning();
+            }, 3000);
+          }
+          
+          if (err && !(err instanceof ZXing.NotFoundException)) {
+            console.error('Scan error:', err);
+          }
+        });
+
+      } catch (err) {
+        console.error("Camera error:", err);
+        statusElem.textContent = "❌ Camera access denied or unavailable.";
+        showNotification("⚠️ Please allow camera access!", true);
+        stopScanning();
+      }
+    });
+
+    function stopScanning() {
+      scanning = false;
+      startBtn.disabled = false;
+      startBtn.textContent = "📷 Start Scanner";
+      
+      if (codeReader) {
+        codeReader.reset();
+        codeReader = null;
+      }
+      
+      if (videoStream) {
+        videoStream.getTracks().forEach(track => track.stop());
+        videoStream = null;
+      }
+      
+      videoElem.classList.remove("active");
+      scanOverlay.classList.remove("active");
+      scannedDataOverlay.classList.remove("show");
+      videoElem.srcObject = null;
+      statusElem.textContent = "Tap 'Start Scanner' to scan next item.";
+    }
+
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("service-worker.js")
+        .then((reg) => console.log("Service Worker Registered", reg))
+        .catch(() => console.warn("Service worker registration failed"));
+    }
+
+    window.addEventListener("beforeinstallprompt", (e) => {
+      e.preventDefault();
+      const installBtn = document.createElement("button");
+      installBtn.textContent = "📲 Install App";
+      Object.assign(installBtn.style, {
+        position:"fixed",
+        bottom:"80px",
+        left:"50%",
+        transform:"translateX(-50%)",
+        background:"#00b894",
+        color:"#fff",
+        border:"none",
+        borderRadius:"6px",
+        padding:"10px 20px",
+        fontSize:"16px",
+        cursor:"pointer",
+        zIndex:"9999"
+      });
+      document.body.appendChild(installBtn);
+      installBtn.addEventListener("click", async () => {
+        installBtn.remove();
+        e.prompt();
+        const choice = await e.userChoice;
+        if (choice.outcome === "accepted") showNotification("✅ App installed!");
+        else showNotification("ℹ️ Installation cancelled");
+      });
+    });
+
+    renderJsonOutput();
+  </script>
+</body>
+</html>
