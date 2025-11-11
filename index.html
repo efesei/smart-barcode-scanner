@@ -7,7 +7,13 @@
   <link rel="manifest" href="manifest.json" />
   <meta name="theme-color" content="#0066cc" />
   <style>
-    body {font-family: Arial, sans-serif;text-align: center;margin: 0;padding: 1rem;background: #f5f5f5;}
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin: 0;
+      padding: 1rem;
+      background: #f5f5f5;
+    }
     
     .video-container {
       position: relative;
@@ -24,7 +30,9 @@
       display: none;
       border-radius: 10px;
     }
-    video.active {display: block;}
+    video.active {
+      display: block;
+    }
     
     .scan-overlay {
       position: absolute;
@@ -36,7 +44,9 @@
       display: none;
     }
     
-    .scan-overlay.active {display: block;}
+    .scan-overlay.active {
+      display: block;
+    }
     
     .scan-line {
       position: absolute;
@@ -45,7 +55,11 @@
       height: 3px;
       background: linear-gradient(90deg, transparent, #ff0000, transparent);
       box-shadow: 0 0 10px #ff0000, 0 0 20px #ff0000;
-      animation: scan 2s linear infinite;
+      animation: scan 3s linear infinite;
+    }
+    
+    .scan-line.paused {
+      animation-play-state: paused;
     }
     
     @keyframes scan {
@@ -72,7 +86,9 @@
       animation: slideUp 0.3s ease-out;
     }
     
-    .scanned-data-overlay.show {display: block;}
+    .scanned-data-overlay.show {
+      display: block;
+    }
     
     @keyframes slideUp {
       from {
@@ -85,11 +101,61 @@
       }
     }
     
-    button {margin-top: 1rem;padding: 10px 20px;font-size: 16px;border: none;border-radius: 6px;background: #0066cc;color: white;cursor: pointer;}
-    button:disabled {background: #aaa;cursor: not-allowed;}
-    button.stop {background: #e74c3c;}
-    #settings {margin-top: 1.5rem;text-align: left;max-width: 400px;margin-inline: auto;background: white;padding: 1rem;border-radius: 8px;box-shadow: 0 2px 5px rgba(0,0,0,0.1);}
-    #history {margin-top: 1.5rem;text-align: left;max-width: 400px;margin-inline: auto;background: white;padding: 1rem;border-radius: 8px;box-shadow: 0 2px 5px rgba(0,0,0,0.1);}
+    button {
+      margin-top: 1rem;
+      padding: 10px 20px;
+      font-size: 16px;
+      border: none;
+      border-radius: 6px;
+      background: #0066cc;
+      color: white;
+      cursor: pointer;
+    }
+    button:disabled {
+      background: #aaa;
+      cursor: not-allowed;
+    }
+    button.stop {
+      background: #e74c3c;
+    }
+    
+    #settings {
+      margin-top: 1.5rem;
+      text-align: left;
+      max-width: 400px;
+      margin-inline: auto;
+      background: white;
+      padding: 1rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    
+    #history {
+      margin-top: 1.5rem;
+      text-align: left;
+      max-width: 400px;
+      margin-inline: auto;
+      background: white;
+      padding: 1rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    
+    .history-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    
+    .clear-all-btn {
+      background: #e74c3c !important;
+      color: white !important;
+      padding: 8px 16px !important;
+      font-size: 14px !important;
+      border-radius: 4px !important;
+      margin-top: 0 !important;
+    }
     
     .json-output {
       background: #1e1e1e;
@@ -111,18 +177,73 @@
       background: #2d2d2d;
       border-left: 3px solid #0066cc;
       border-radius: 4px;
+      position: relative;
     }
     
-    .json-key {color: #9cdcfe;}
-    .json-string {color: #ce9178;}
-    .json-number {color: #b5cea8;}
+    .json-item-content {
+      margin-right: 40px;
+    }
     
-    input[type="text"] {width: 100%;padding: 8px;border: 1px solid #ddd;border-radius: 4px;font-size: 14px;box-sizing: border-box;}
-    label {display: block;margin-bottom: 5px;font-weight: bold;color: #333;}
-    .settings-group {margin-bottom: 1rem;}
-    .status-indicator {display: inline-block;width: 10px;height: 10px;border-radius: 50%;margin-left: 8px;}
-    .status-indicator.online {background: #00b894;}
-    .status-indicator.offline {background: #d63031;}
+    .delete-btn {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: #e74c3c;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      width: 30px;
+      height: 30px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+    }
+    
+    .json-key {
+      color: #9cdcfe;
+    }
+    .json-string {
+      color: #ce9178;
+    }
+    .json-number {
+      color: #b5cea8;
+    }
+    
+    input[type="text"] {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+      box-sizing: border-box;
+    }
+    
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+      color: #333;
+    }
+    
+    .settings-group {
+      margin-bottom: 1rem;
+    }
+    
+    .status-indicator {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      margin-left: 8px;
+    }
+    .status-indicator.online {
+      background: #00b894;
+    }
+    .status-indicator.offline {
+      background: #d63031;
+    }
     
     .notification {
       position: fixed;
@@ -139,7 +260,9 @@
       max-width: 90%;
       text-align: center;
     }
-    .notification.error {background: #e74c3c;}
+    .notification.error {
+      background: #e74c3c;
+    }
     
     @keyframes slideDown {
       from {
@@ -168,16 +291,20 @@
   <div class="video-container">
     <video id="video" playsinline autoplay></video>
     <div class="scan-overlay" id="scanOverlay">
-      <div class="scan-line"></div>
+      <div class="scan-line" id="scanLine"></div>
     </div>
     <div class="scanned-data-overlay" id="scannedDataOverlay"></div>
   </div>
   
   <p id="status">Configure webhook URL and tap "Start Scanner" to begin.<span class="status-indicator" id="onlineStatus"></span></p>
   <button id="startBtn">📷 Start Scanner</button>
+  <button id="stopBtn" class="stop" style="display:none;">⏹️ Stop Scanner</button>
 
   <div id="history">
-    <h3>📋 Scan History <span style="font-size:12px;font-weight:normal;">(Pending: <span id="pendingCount">0</span>)</span></h3>
+    <div class="history-header">
+      <h3>📋 Scan History <span style="font-size:12px;font-weight:normal;">(Pending: <span id="pendingCount">0</span>)</span></h3>
+      <button id="clearAllBtn" class="clear-all-btn">🗑️ Clear All</button>
+    </div>
     <div class="json-output" id="jsonOutput"></div>
   </div>
 
@@ -186,13 +313,16 @@
     const videoElem = document.getElementById("video");
     const statusElem = document.getElementById("status");
     const startBtn = document.getElementById("startBtn");
+    const stopBtn = document.getElementById("stopBtn");
     const webhookUrlInput = document.getElementById("webhookUrl");
     const saveSettingsBtn = document.getElementById("saveSettings");
     const onlineStatus = document.getElementById("onlineStatus");
     const pendingCountElem = document.getElementById("pendingCount");
     const scanOverlay = document.getElementById("scanOverlay");
+    const scanLine = document.getElementById("scanLine");
     const scannedDataOverlay = document.getElementById("scannedDataOverlay");
     const jsonOutput = document.getElementById("jsonOutput");
+    const clearAllBtn = document.getElementById("clearAllBtn");
 
     let scanning = false;
     let scanQueue = JSON.parse(localStorage.getItem("scanQueue") || "[]");
@@ -249,9 +379,12 @@
       const pending = scanQueue.filter(item => !item.sent).length;
       pendingCountElem.textContent = pending;
       
-      scanQueue.slice(-10).reverse().forEach((item) => {
+      scanQueue.slice(-10).reverse().forEach((item, index) => {
         const jsonItem = document.createElement("div");
         jsonItem.className = "json-item";
+        
+        const jsonItemContent = document.createElement("div");
+        jsonItemContent.className = "json-item-content";
         
         const jsonText = JSON.stringify({
           barcode_data: item.barcode_data,
@@ -265,7 +398,23 @@
           .replace(/: "([^"]+)"/g, ': <span class="json-string">"$1"</span>')
           .replace(/: (\d+)/g, ': <span class="json-number">$1</span>');
         
-        jsonItem.innerHTML = formatted;
+        jsonItemContent.innerHTML = formatted;
+        jsonItem.appendChild(jsonItemContent);
+        
+        // Add delete button
+        const deleteBtn = document.createElement("button");
+        deleteBtn.className = "delete-btn";
+        deleteBtn.innerHTML = "×";
+        deleteBtn.title = "Delete this item";
+        deleteBtn.addEventListener("click", () => {
+          // Calculate the actual index in scanQueue (since we're showing reversed)
+          const actualIndex = scanQueue.length - 1 - index;
+          scanQueue.splice(actualIndex, 1);
+          saveQueue();
+          showNotification("Item deleted");
+        });
+        
+        jsonItem.appendChild(deleteBtn);
         jsonOutput.appendChild(jsonItem);
       });
     }
@@ -274,6 +423,20 @@
       localStorage.setItem("scanQueue", JSON.stringify(scanQueue)); 
       renderJsonOutput();
     }
+
+    // Clear all button functionality
+    clearAllBtn.addEventListener("click", () => {
+      if (scanQueue.length === 0) {
+        showNotification("History is already empty", true);
+        return;
+      }
+      
+      if (confirm("Are you sure you want to delete all scan history? This action cannot be undone.")) {
+        scanQueue = [];
+        saveQueue();
+        showNotification("All scan history cleared");
+      }
+    });
 
     async function sendPendingScans() {
       if (!navigator.onLine || scanQueue.length === 0 || !webhookUrl) return;
@@ -335,8 +498,8 @@
       }
 
       scanning = true;
-      startBtn.disabled = true;
-      startBtn.textContent = "🔄 Scanning...";
+      startBtn.style.display = "none";
+      stopBtn.style.display = "inline-block";
       statusElem.textContent = "Requesting camera access...";
 
       try {
@@ -355,7 +518,11 @@
         codeReader.decodeFromVideoDevice(undefined, 'video', async (result, err) => {
           if (result && scanning) {
             const code = result.text;
-
+            
+            // Immediately stop scanning
+            scanning = false;
+            scanLine.classList.add("paused");
+            
             scannedDataOverlay.textContent = code;
             scannedDataOverlay.classList.add("show");
 
@@ -379,9 +546,21 @@
               await sendPendingScans();
             }
             
+            // Reset after 3 seconds
             setTimeout(() => {
-              stopScanning();
+              scannedDataOverlay.classList.remove("show");
+              if (scanning) {
+                scanLine.classList.remove("paused");
+              }
             }, 3000);
+            
+            // Restart scanning after a brief pause
+            setTimeout(() => {
+              if (scanning) {
+                scanLine.classList.remove("paused");
+                statusElem.textContent = "Camera ready. Point at barcode...";
+              }
+            }, 3500);
           }
           
           if (err && !(err instanceof ZXing.NotFoundException)) {
@@ -397,10 +576,12 @@
       }
     });
 
+    stopBtn.addEventListener("click", stopScanning);
+
     function stopScanning() {
       scanning = false;
-      startBtn.disabled = false;
-      startBtn.textContent = "📷 Start Scanner";
+      startBtn.style.display = "inline-block";
+      stopBtn.style.display = "none";
       
       if (codeReader) {
         codeReader.reset();
