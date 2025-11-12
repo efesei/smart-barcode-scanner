@@ -1,79 +1,99 @@
-#Deft Barcode Scanner Documentation
-#Overview
-Deft Barcode Scanner is a web-based barcode scanning application developed by Deftmind Technology and Media Ventures. It supports both 1D linear barcodes and 2D QR codes with real-time scanning capabilities.
+# 🧭 Deft Barcode Scanner
 
-#Supported Formats
-QR Codes (2D)
-Data Matrix (2D)
-UPC-A/E (1D)
-EAN-8/13 (1D)
-Code 128 (1D)
-Code 39 (1D)
-PDF417 (2D)
+A powerful **web-based barcode and QR code scanning application** that supports real-time detection with webhook integration.
 
-#Key Features
-1. Real-time Scanning: Instant detection without manual capture
-2. Webhook Integration: Automatic data transmission to configured endpoints
-3. Auto-Recovery: Self-healing scanner with manual refresh option
-4. Mobile Optimized: Responsive design for all devices
-5. PWA Support: Install as native app on mobile devices
-6. Data Management: Current scan display with clear functionality
+![Version](https://img.shields.io/badge/Version-1.1-blue.svg)
+![PWA Ready](https://img.shields.io/badge/PWA-Ready-green.svg)
+![Browser Support](https://img.shields.io/badge/Browser-Chrome%20%7C%20Safari%20%7C%20Firefox%20%7C%20Edge-orange.svg)
 
-#Usage Instructions
-##Basic Scanning
-1. Configure webhook URL in Settings (optional)
-2. Tap "Start Scanner" to activate camera
-3. Point camera at barcode/QR code
-4. Scanner automatically detects and captures data
-5. Data displays in Current Scan section
-6. Scanner resets automatically after 1.5 seconds
+---
 
-#Optimal Scanning Conditions
-1. Lighting: Well-lit environment, avoid direct glare
-2. Distance: 4-12 inches from code
-3. Angle: Direct facing, avoid extreme angles
-4. Stability: Keep device steady during scanning
+## 📖 Overview
+**Deft Barcode Scanner** is a responsive web application that enables real-time barcode and QR code scanning directly from your browser.  
+Built with modern web technologies, it provides a seamless scanning experience across all devices with camera capabilities.
 
-#Technical Specifications
-##Camera Requirements
-Minimum: 720p resolution with auto-focus
-Recommended: 1080p or higher with continuous auto-focus
+---
 
-##Browser Support: Chrome, Safari, Firefox, Edge (mobile & desktop)
-##Performance Notes
-Scan Speed: Typically 1-3 seconds for clear codes
-Success Rate: 90%+ under optimal conditions
-Limitations: Small codes (<0.5 inch) and reflective surfaces may require multiple attempts
+## 🚀 Features
 
-#Troubleshooting
-##Common Issues & Solutions
-Scanner won't start: Check camera permissions
-Poor detection: Improve lighting, steady device, clean camera lens
-Animation stuck: Use "Fix Scanner" button
-No sound: Check device volume and silent mode
+- 📱 **Real-time Scanning** — Instant detection without manual capture  
+- 🔗 **Webhook Integration** — Automatic data transmission to endpoints  
+- 📚 **Webhook History** — Save and reuse previous webhook URLs  
+- 🔄 **Auto-Recovery** — Self-healing scanner with manual refresh  
+- 📲 **PWA Support** — Install as native app on mobile devices  
+- 🎯 **Multi-Format Support** — Comprehensive barcode and QR code compatibility  
+- 💾 **Local Storage** — Settings persist across sessions  
+- 📱 **Mobile Optimized** — Responsive design for all screen sizes  
 
-#Webhook Configuration
-Format: Valid HTTPS URL
-Method: POST requests with JSON payload
-Data Structure: {barcode_data, timestamp, code_type}
+---
 
-#Best Practices
-For Best Results
-Ensure adequate lighting without reflections
-Hold device parallel to barcode surface
-Maintain steady position during scanning
-Clean camera lens regularly
-Use "Fix Scanner" if performance degrades
+## 🧩 Supported Formats
 
-##For Dense Barcodes
-Use higher resolution cameras
-Ensure excellent lighting
-Get closer to the barcode
-Use continuous focus mode
+### 2D Codes
+- QR Codes  
+- Data Matrix  
+- PDF417  
 
-#Support
-For technical support or feature requests, contact Deftmind Technology and Media Ventures.
+### 1D Linear Barcodes
+- UPC-A / UPC-E  
+- EAN-8 / EAN-13  
+- Code 128  
+- Code 39  
 
-Version: 1.0
-Last Updated: 2025
-Compatibility: All modern browsers and mobile devices
+---
+
+## ⚡ Quick Start
+
+### Basic Usage
+1. **Configure Settings (Optional)**  
+   - Open the **Settings** section  
+   - Enter your **webhook URL** (optional)  
+   - Click **Save Settings**
+
+2. **Start Scanning**  
+   - Click **Start Scanner** to activate camera  
+   - Point camera at barcode or QR code  
+   - Scanner automatically detects and captures data  
+   - View results in the **Current Scan** section
+
+3. **Webhook History**  
+   - Click the webhook URL field to see recent entries  
+   - Select from previously used URLs  
+   - History automatically saves on settings save  
+
+---
+
+## 💡 Optimal Scanning Conditions
+| Condition | Recommendation |
+|------------|----------------|
+| **Lighting** | Well-lit environment, avoid direct glare |
+| **Distance** | 4–12 inches from code |
+| **Angle** | Direct facing, avoid extreme angles |
+| **Stability** | Keep device steady during scanning |
+
+---
+
+## 🎥 Camera Requirements
+
+### Minimum Specifications
+- **Resolution:** 720p (1280×720)  
+- **Focus:** Auto-focus capability  
+- **Browser:** Modern browser with camera support  
+
+### Recommended Specifications
+- **Resolution:** 1080p (1920×1080) or higher  
+- **Focus:** Continuous auto-focus  
+- **Features:** Optical image stabilization, good low-light performance  
+
+---
+
+## 🌐 Webhook Configuration
+
+### Data Format
+```json
+{
+  "barcode_data": "scanned_data_here",
+  "timestamp": "2025-01-01T12:00:00.000Z",
+  "scanned_at": "2025-01-01T12:00:00.000Z",
+  "code_type": "QR_CODE"
+}
