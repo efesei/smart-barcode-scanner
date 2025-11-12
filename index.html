@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Smart Barcode Scanner</title>
+  <title>Deft Barcode Scanner</title>
   <link rel="manifest" href="manifest.json" />
   <meta name="theme-color" content="#0066cc" />
   <style>
@@ -13,6 +13,30 @@
       margin: 0;
       padding: 1rem;
       background: #f5f5f5;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+    
+    .main-content {
+      flex: 1;
+    }
+    
+    .app-header {
+      margin-bottom: 1rem;
+    }
+    
+    .app-title {
+      font-size: 1.5rem;
+      font-weight: bold;
+      color: #0066cc;
+      margin: 0;
+    }
+    
+    .app-author {
+      font-size: 0.8rem;
+      color: #666;
+      margin: 0;
     }
     
     .video-container {
@@ -130,7 +154,7 @@
       box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     }
     
-    #history {
+    #currentScan {
       margin-top: 1.5rem;
       text-align: left;
       max-width: 400px;
@@ -141,14 +165,14 @@
       box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     }
     
-    .history-header {
+    .scan-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
       margin-bottom: 10px;
     }
     
-    .clear-all-btn {
+    .clear-scan-btn {
       background: #e74c3c !important;
       color: white !important;
       padding: 8px 16px !important;
@@ -157,58 +181,25 @@
       margin-top: 0 !important;
     }
     
-    .json-output {
-      background: #1e1e1e;
-      color: #d4d4d4;
-      padding: 10px;
+    .scan-data {
+      background: #f8f9fa;
+      border: 1px solid #e9ecef;
       border-radius: 6px;
+      padding: 15px;
       font-family: 'Courier New', monospace;
-      font-size: 12px;
+      font-size: 14px;
       text-align: left;
-      overflow-x: auto;
-      max-height: 300px;
+      word-break: break-all;
+      white-space: pre-wrap;
+      max-height: 200px;
       overflow-y: auto;
       margin-top: 10px;
     }
     
-    .json-item {
-      margin-bottom: 10px;
-      padding: 8px;
-      background: #2d2d2d;
-      border-left: 3px solid #0066cc;
-      border-radius: 4px;
-      position: relative;
-    }
-    
-    .json-item-content {
-      margin-right: 40px;
-    }
-    
-    .delete-btn {
-      position: absolute;
-      top: 8px;
-      right: 8px;
-      background: #e74c3c;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      width: 30px;
-      height: 30px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 14px;
-    }
-    
-    .json-key {
-      color: #9cdcfe;
-    }
-    .json-string {
-      color: #ce9178;
-    }
-    .json-number {
-      color: #b5cea8;
+    .scan-data.empty {
+      color: #6c757d;
+      font-style: italic;
+      text-align: center;
     }
     
     input[type="text"] {
@@ -286,39 +277,68 @@
       font-size: 12px;
       z-index: 10001;
     }
+    
+    .copyright-footer {
+      margin-top: 2rem;
+      padding: 1rem;
+      color: #666;
+      font-size: 0.8rem;
+      border-top: 1px solid #ddd;
+    }
+    
+    .copyright-footer a {
+      color: #0066cc;
+      text-decoration: none;
+    }
+    
+    .copyright-footer a:hover {
+      text-decoration: underline;
+    }
   </style>
 </head>
 <body>
-  <h2>📦 Smart Barcode Scanner</h2>
-  
-  <div id="settings">
-    <h3>⚙️ Settings</h3>
-    <div class="settings-group">
-      <label for="webhookUrl">Webhook URL:</label>
-      <input type="text" id="webhookUrl" placeholder="https://your-webhook-url.com/endpoint" />
+  <div class="main-content">
+    <div class="app-header">
+      <h1 class="app-title">Deft Barcode Scanner</h1>
+      <p class="app-author">by Deftmind Technology and Media Ventures</p>
     </div>
-    <button id="saveSettings">💾 Save Settings</button>
+    
+    <div id="settings">
+      <h3>⚙️ Settings</h3>
+      <div class="settings-group">
+        <label for="webhookUrl">Webhook URL:</label>
+        <input type="text" id="webhookUrl" placeholder="https://your-webhook-url.com/endpoint" />
+      </div>
+      <button id="saveSettings">💾 Save Settings</button>
+    </div>
+
+    <div class="video-container">
+      <video id="video" playsinline autoplay></video>
+      <div class="scan-overlay" id="scanOverlay">
+        <div class="scan-line" id="scanLine"></div>
+      </div>
+      <div class="scanned-data-overlay" id="scannedDataOverlay"></div>
+    </div>
+    
+    <p id="status">Configure webhook URL and tap "Start Scanner" to begin.<span class="status-indicator" id="onlineStatus"></span></p>
+    <button id="startBtn">📷 Start Scanner</button>
+    <button id="stopBtn" class="stop" style="display:none;">⏹️ Stop Scanner</button>
+    <button id="refreshScanner" style="display:none; background: #f39c12;">🔄 Fix Scanner</button>
+
+    <div id="currentScan">
+      <div class="scan-header">
+        <h3>📄 Current Scan</h3>
+        <button id="clearScanBtn" class="clear-scan-btn">🗑️ Clear Data</button>
+      </div>
+      <div class="scan-data empty" id="scanData">No data scanned yet.</div>
+    </div>
   </div>
 
-  <div class="video-container">
-    <video id="video" playsinline autoplay></video>
-    <div class="scan-overlay" id="scanOverlay">
-      <div class="scan-line" id="scanLine"></div>
-    </div>
-    <div class="scanned-data-overlay" id="scannedDataOverlay"></div>
-  </div>
-  
-  <p id="status">Configure webhook URL and tap "Start Scanner" to begin.<span class="status-indicator" id="onlineStatus"></span></p>
-  <button id="startBtn">📷 Start Scanner</button>
-  <button id="stopBtn" class="stop" style="display:none;">⏹️ Stop Scanner</button>
-  <button id="refreshScanner" style="display:none; background: #f39c12;">🔄 Fix Scanner</button>
-
-  <div id="history">
-    <div class="history-header">
-      <h3>📋 Scan History <span style="font-size:12px;font-weight:normal;">(Pending: <span id="pendingCount">0</span>)</span></h3>
-      <button id="clearAllBtn" class="clear-all-btn">🗑️ Clear All</button>
-    </div>
-    <div class="json-output" id="jsonOutput"></div>
+  <div class="copyright-footer">
+    Copyright © <span id="currentYear">2025</span>. 
+    <a href="https://deftmindai.com/welcome-to-deftmind-technology-and-media-ventures/" target="_blank">
+      Deftmind Technology and Media Ventures
+    </a>
   </div>
 
   <script src="https://unpkg.com/@zxing/library@latest"></script>
@@ -331,15 +351,18 @@
     const webhookUrlInput = document.getElementById("webhookUrl");
     const saveSettingsBtn = document.getElementById("saveSettings");
     const onlineStatus = document.getElementById("onlineStatus");
-    const pendingCountElem = document.getElementById("pendingCount");
     const scanOverlay = document.getElementById("scanOverlay");
     const scanLine = document.getElementById("scanLine");
     const scannedDataOverlay = document.getElementById("scannedDataOverlay");
-    const jsonOutput = document.getElementById("jsonOutput");
-    const clearAllBtn = document.getElementById("clearAllBtn");
+    const scanDataElem = document.getElementById("scanData");
+    const clearScanBtn = document.getElementById("clearScanBtn");
+    const currentYearElem = document.getElementById("currentYear");
+
+    // Set current year in copyright
+    currentYearElem.textContent = new Date().getFullYear();
 
     let scanning = false;
-    let scanQueue = JSON.parse(localStorage.getItem("scanQueue") || "[]");
+    let currentScanData = null;
     let webhookUrl = localStorage.getItem("webhookUrl") || "";
     let codeReader = null;
     let videoStream = null;
@@ -421,6 +444,24 @@
       }, 500);
     }
 
+    // Update scan data display
+    function updateScanDisplay() {
+      if (currentScanData) {
+        scanDataElem.textContent = currentScanData;
+        scanDataElem.classList.remove('empty');
+      } else {
+        scanDataElem.textContent = "No data scanned yet.";
+        scanDataElem.classList.add('empty');
+      }
+    }
+
+    // Clear current scan data
+    function clearScanData() {
+      currentScanData = null;
+      updateScanDisplay();
+      showNotification("Scan data cleared");
+    }
+
     // Request notification permission
     if ("Notification" in window && Notification.permission === "default") {
       Notification.requestPermission();
@@ -449,109 +490,44 @@
     // Refresh scanner button
     refreshScannerBtn.addEventListener("click", refreshScanner);
 
-    function renderJsonOutput() {
-      jsonOutput.innerHTML = "";
-      const pending = scanQueue.filter(item => !item.sent).length;
-      pendingCountElem.textContent = pending;
+    // Clear scan data button
+    clearScanBtn.addEventListener("click", clearScanData);
+
+    async function sendScanData(scanData) {
+      if (!navigator.onLine || !webhookUrl) return;
       
-      scanQueue.slice(-10).reverse().forEach((item, index) => {
-        const jsonItem = document.createElement("div");
-        jsonItem.className = "json-item";
-        
-        const jsonItemContent = document.createElement("div");
-        jsonItemContent.className = "json-item-content";
-        
-        const jsonText = JSON.stringify({
-          barcode_data: item.barcode_data,
-          timestamp: item.timestamp,
-          code_type: item.code_type || "unknown",
-          status: item.sent ? "sent" : "pending"
-        }, null, 2);
-        
-        const formatted = jsonText
-          .replace(/"([^"]+)":/g, '<span class="json-key">"$1"</span>:')
-          .replace(/: "([^"]+)"/g, ': <span class="json-string">"$1"</span>')
-          .replace(/: (\d+)/g, ': <span class="json-number">$1</span>');
-        
-        jsonItemContent.innerHTML = formatted;
-        jsonItem.appendChild(jsonItemContent);
-        
-        // Add delete button
-        const deleteBtn = document.createElement("button");
-        deleteBtn.className = "delete-btn";
-        deleteBtn.innerHTML = "×";
-        deleteBtn.title = "Delete this item";
-        deleteBtn.addEventListener("click", () => {
-          // Calculate the actual index in scanQueue (since we're showing reversed)
-          const actualIndex = scanQueue.length - 1 - index;
-          scanQueue.splice(actualIndex, 1);
-          saveQueue();
-          showNotification("Item deleted");
+      try {
+        const payload = {
+          barcode_data: scanData.barcode_data,
+          timestamp: scanData.timestamp,
+          scanned_at: scanData.timestamp,
+          code_type: scanData.code_type || "unknown"
+        };
+
+        console.log("Sending to webhook:", JSON.stringify(payload, null, 2));
+
+        const res = await fetch(webhookUrl, {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify(payload)
         });
         
-        jsonItem.appendChild(deleteBtn);
-        jsonOutput.appendChild(jsonItem);
-      });
-    }
-
-    function saveQueue() { 
-      localStorage.setItem("scanQueue", JSON.stringify(scanQueue)); 
-      renderJsonOutput();
-    }
-
-    // Clear all button functionality
-    clearAllBtn.addEventListener("click", () => {
-      if (scanQueue.length === 0) {
-        showNotification("History is already empty", true);
-        return;
-      }
-      
-      if (confirm("Are you sure you want to delete all scan history? This action cannot be undone.")) {
-        scanQueue = [];
-        saveQueue();
-        showNotification("All scan history cleared");
-      }
-    });
-
-    async function sendPendingScans() {
-      if (!navigator.onLine || scanQueue.length === 0 || !webhookUrl) return;
-      
-      const unsent = scanQueue.filter(item => !item.sent);
-      for (const item of unsent) {
-        try {
-          const payload = {
-            barcode_data: item.barcode_data,
-            timestamp: item.timestamp,
-            scanned_at: item.timestamp,
-            code_type: item.code_type || "unknown"
-          };
-
-          console.log("Sending to webhook:", JSON.stringify(payload, null, 2));
-
-          const res = await fetch(webhookUrl, {
-            method: "POST",
-            headers: {"Content-Type": "application/json"},
-            body: JSON.stringify(payload)
-          });
-          
-          console.log("Webhook response:", res.status, res.statusText);
-          
-          if (res.ok) {
-            item.sent = true;
-            saveQueue();
-          }
-        } catch (err) { 
-          console.error("Send error:", err); 
-          break; 
+        console.log("Webhook response:", res.status, res.statusText);
+        
+        if (res.ok) {
+          showNotification("✅ Data sent to webhook!");
+        } else {
+          showNotification("⚠️ Webhook error: " + res.status, true);
         }
+      } catch (err) { 
+        console.error("Send error:", err);
+        showNotification("⚠️ Failed to send data", true);
       }
     }
-
-    window.addEventListener("online", sendPendingScans);
 
     function showNotification(message, isError = false) {
       if ("Notification" in window && Notification.permission === "granted") {
-        new Notification("Barcode Scanner", {
+        new Notification("Deft Barcode Scanner", {
           body: message,
           icon: "https://cdn-icons-png.flaticon.com/512/864/864685.png"
         });
@@ -572,6 +548,9 @@
         return;
       }
 
+      // Clear previous scan data when starting new session
+      clearScanData();
+      
       scanning = true;
       startBtn.style.display = "none";
       stopBtn.style.display = "inline-block";
@@ -579,8 +558,14 @@
       statusElem.textContent = "Requesting camera access...";
 
       try {
+        // Enhanced camera settings for better dense barcode scanning
         videoStream = await navigator.mediaDevices.getUserMedia({ 
-          video: { facingMode: "environment" } 
+          video: { 
+            facingMode: "environment",
+            width: { ideal: 1920 },
+            height: { ideal: 1080 },
+            focusMode: "continuous"
+          } 
         });
         
         videoElem.srcObject = videoStream;
@@ -597,6 +582,7 @@
 
         codeReader = new ZXing.BrowserMultiFormatReader();
         
+        // Configure scanner for better performance with dense barcodes
         codeReader.decodeFromVideoDevice(undefined, 'video', async (result, err) => {
           if (result && scanning) {
             const code = result.text;
@@ -625,13 +611,15 @@
             
             playBeep();
             
-            showNotification(`✅ Barcode Scanned!\n${code.substring(0, 50)}${code.length > 50 ? '...' : ''}`);
+            showNotification(`✅ Barcode Scanned!`);
             
-            scanQueue.push(data);
-            saveQueue();
+            // Store and display current scan data
+            currentScanData = code;
+            updateScanDisplay();
             
+            // Send to webhook if configured
             if (navigator.onLine && webhookUrl) {
-              await sendPendingScans();
+              await sendScanData(data);
             }
             
             // Clear any existing restart timeout
@@ -639,14 +627,14 @@
               clearTimeout(restartTimeout);
             }
             
-            // REDUCED: Set up auto-restart after 1.5 seconds instead of 3
+            // Set up auto-restart after 1.5 seconds
             restartTimeout = setTimeout(() => {
               scannedDataOverlay.classList.remove("show");
               startBtn.style.display = "inline-block";
               stopBtn.style.display = "none";
               statusElem.textContent = "Tap 'Start Scanner' to scan next item.";
               stopAnimationMonitoring();
-            }, 1500); // Changed from 3000 to 1500
+            }, 1500);
           }
           
           if (err && !(err instanceof ZXing.NotFoundException)) {
@@ -730,7 +718,8 @@
       });
     });
 
-    renderJsonOutput();
+    // Initialize scan display
+    updateScanDisplay();
   </script>
 </body>
 </html>
