@@ -202,6 +202,11 @@
       text-align: center;
     }
     
+    .webhook-input-container {
+      position: relative;
+      margin-bottom: 10px;
+    }
+    
     input[type="text"] {
       width: 100%;
       padding: 8px;
@@ -209,6 +214,48 @@
       border-radius: 4px;
       font-size: 14px;
       box-sizing: border-box;
+    }
+    
+    .webhook-history {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background: white;
+      border: 1px solid #ddd;
+      border-top: none;
+      border-radius: 0 0 4px 4px;
+      max-height: 150px;
+      overflow-y: auto;
+      z-index: 10;
+      display: none;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    
+    .webhook-history.show {
+      display: block;
+    }
+    
+    .webhook-history-item {
+      padding: 8px 12px;
+      cursor: pointer;
+      border-bottom: 1px solid #f0f0f0;
+      text-align: left;
+      font-size: 14px;
+    }
+    
+    .webhook-history-item:hover {
+      background: #f5f5f5;
+    }
+    
+    .webhook-history-item:last-child {
+      border-bottom: none;
+    }
+    
+    .history-hint {
+      font-size: 12px;
+      color: #666;
+      margin-top: 5px;
     }
     
     label {
@@ -307,7 +354,11 @@
       <h3>⚙️ Settings</h3>
       <div class="settings-group">
         <label for="webhookUrl">Webhook URL:</label>
-        <input type="text" id="webhookUrl" placeholder="https://your-webhook-url.com/endpoint" />
+        <div class="webhook-input-container">
+          <input type="text" id="webhookUrl" placeholder="https://your-webhook-url.com/endpoint" />
+          <div class="webhook-history" id="webhookHistory"></div>
+        </div>
+        <div class="history-hint">Click to see previously used webhooks</div>
       </div>
       <button id="saveSettings">💾 Save Settings</button>
     </div>
@@ -349,6 +400,7 @@
     const stopBtn = document.getElementById("stopBtn");
     const refreshScannerBtn = document.getElementById("refreshScanner");
     const webhookUrlInput = document.getElementById("webhookUrl");
+    const webhookHistoryElem = document.getElementById("webhookHistory");
     const saveSettingsBtn = document.getElementById("saveSettings");
     const onlineStatus = document.getElementById("onlineStatus");
     const scanOverlay = document.getElementById("scanOverlay");
@@ -364,11 +416,89 @@
     let scanning = false;
     let currentScanData = null;
     let webhookUrl = localStorage.getItem("webhookUrl") || "";
+    let webhookHistory = JSON.parse(localStorage.getItem("webhookHistory") || "[]");
     let codeReader = null;
     let videoStream = null;
     let restartTimeout = null;
     let animationCheckInterval = null;
     let lastAnimationState = false;
+
+    // Initialize webhook history display
+    function initWebhookHistory() {
+      // Load current webhook URL if exists
+      if (webhookUrl) {
+        webhookUrlInput.value = webhookUrl;
+      }
+      
+      // Populate history dropdown
+      updateWebhookHistoryDisplay();
+      
+      // Show history when input is focused
+      webhookUrlInput.addEventListener('focus', () => {
+        if (webhookHistory.length > 0) {
+          webhookHistoryElem.classList.add('show');
+        }
+      });
+      
+      // Hide history when clicking outside
+      document.addEventListener('click', (e) => {
+        if (!webhookUrlInput.contains(e.target) && !webhookHistoryElem.contains(e.target)) {
+          webhookHistoryElem.classList.remove('show');
+        }
+      });
+    }
+
+    // Update webhook history display
+    function updateWebhookHistoryDisplay() {
+      webhookHistoryElem.innerHTML = '';
+      
+      if (webhookHistory.length === 0) {
+        const emptyItem = document.createElement('div');
+        emptyItem.className = 'webhook-history-item';
+        emptyItem.textContent = 'No previous webhooks';
+        emptyItem.style.color = '#999';
+        emptyItem.style.fontStyle = 'italic';
+        webhookHistoryElem.appendChild(emptyItem);
+        return;
+      }
+      
+      // Show most recent first (limit to 5)
+      const recentHistory = webhookHistory.slice(0, 5);
+      
+      recentHistory.forEach(url => {
+        const item = document.createElement('div');
+        item.className = 'webhook-history-item';
+        item.textContent = url;
+        item.addEventListener('click', () => {
+          webhookUrlInput.value = url;
+          webhookHistoryElem.classList.remove('show');
+          webhookUrlInput.focus();
+        });
+        webhookHistoryElem.appendChild(item);
+      });
+    }
+
+    // Add URL to webhook history
+    function addToWebhookHistory(url) {
+      if (!url || url.trim() === '') return;
+      
+      // Remove if already exists (to avoid duplicates)
+      webhookHistory = webhookHistory.filter(item => item !== url);
+      
+      // Add to beginning (most recent first)
+      webhookHistory.unshift(url);
+      
+      // Limit history to 10 items
+      if (webhookHistory.length > 10) {
+        webhookHistory = webhookHistory.slice(0, 10);
+      }
+      
+      // Save to localStorage
+      localStorage.setItem("webhookHistory", JSON.stringify(webhookHistory));
+      
+      // Update display
+      updateWebhookHistoryDisplay();
+    }
 
     // Create barcode scanner beep sound
     const audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -467,8 +597,9 @@
       Notification.requestPermission();
     }
 
-    // Load saved webhook URL
+    // Load saved webhook URL and initialize history
     webhookUrlInput.value = webhookUrl;
+    initWebhookHistory();
 
     // Update online status
     function updateOnlineStatus() {
@@ -478,11 +609,15 @@
     window.addEventListener("online", updateOnlineStatus);
     window.addEventListener("offline", updateOnlineStatus);
 
-    // Save settings button
+    // Save settings button - UPDATED to save to history
     saveSettingsBtn.addEventListener("click", () => {
       const newUrl = webhookUrlInput.value.trim();
       webhookUrl = newUrl;
       localStorage.setItem("webhookUrl", newUrl);
+      
+      // Add to webhook history
+      addToWebhookHistory(newUrl);
+      
       showNotification("✅ Settings saved!", false);
       console.log("Webhook URL saved:", newUrl);
     });
