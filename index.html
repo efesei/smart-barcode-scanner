@@ -7,7 +7,6 @@
   <link rel="manifest" href="manifest.json" />
   <meta name="theme-color" content="#0066cc" />
   <style>
-    /* Your existing CSS remains the same */
     body {
       font-family: Arial, sans-serif;
       text-align: center;
@@ -43,11 +42,12 @@
     .video-container {
       position: relative;
       width: 100%;
-      max-width: 400px;
+      max-width: 600px;
       margin: 1rem auto;
       border-radius: 10px;
       overflow: hidden;
       background: #000;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
     }
     
     video {
@@ -73,14 +73,50 @@
       display: block;
     }
     
+    .scan-frame {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 80%;
+      height: 60%;
+      border: 3px solid rgba(0, 255, 0, 0.6);
+      box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.5);
+      border-radius: 10px;
+    }
+    
+    .scan-frame::before,
+    .scan-frame::after {
+      content: '';
+      position: absolute;
+      width: 30px;
+      height: 30px;
+      border: 4px solid #00ff00;
+    }
+    
+    .scan-frame::before {
+      top: -4px;
+      left: -4px;
+      border-right: none;
+      border-bottom: none;
+    }
+    
+    .scan-frame::after {
+      top: -4px;
+      right: -4px;
+      border-left: none;
+      border-bottom: none;
+    }
+    
     .scan-line {
       position: absolute;
-      left: 0;
-      right: 0;
+      left: 10%;
+      right: 10%;
       height: 3px;
       background: linear-gradient(90deg, transparent, #ff0000, transparent);
       box-shadow: 0 0 10px #ff0000, 0 0 20px #ff0000;
       animation: scan 3s linear infinite;
+      top: 20%;
     }
     
     .scan-line.paused {
@@ -88,9 +124,9 @@
     }
     
     @keyframes scan {
-      0% { top: 0%; }
-      50% { top: 100%; }
-      100% { top: 0%; }
+      0% { top: 20%; }
+      50% { top: 80%; }
+      100% { top: 20%; }
     }
     
     .scanned-data-overlay {
@@ -147,7 +183,7 @@
     #settings {
       margin-top: 1.5rem;
       text-align: left;
-      max-width: 400px;
+      max-width: 600px;
       margin-inline: auto;
       background: white;
       padding: 1rem;
@@ -158,7 +194,7 @@
     #currentScan {
       margin-top: 1.5rem;
       text-align: left;
-      max-width: 400px;
+      max-width: 600px;
       margin-inline: auto;
       background: white;
       padding: 1rem;
@@ -342,6 +378,26 @@
     .copyright-footer a:hover {
       text-decoration: underline;
     }
+
+    .scan-tips {
+      background: #fff3cd;
+      border: 1px solid #ffc107;
+      border-radius: 6px;
+      padding: 10px;
+      margin-top: 10px;
+      font-size: 12px;
+      color: #856404;
+      text-align: left;
+    }
+
+    .scan-tips ul {
+      margin: 5px 0;
+      padding-left: 20px;
+    }
+
+    .scan-tips li {
+      margin: 3px 0;
+    }
   </style>
 </head>
 <body>
@@ -362,11 +418,22 @@
         <div class="history-hint">Click to see previously used webhooks</div>
       </div>
       <button id="saveSettings">💾 Save Settings</button>
+      
+      <div class="scan-tips">
+        <strong>📋 Scanning Tips:</strong>
+        <ul>
+          <li>Ensure good lighting</li>
+          <li>Hold device 4-8 inches from barcode</li>
+          <li>Keep camera steady for 1-2 seconds</li>
+          <li>Hold device perpendicular to barcode</li>
+        </ul>
+      </div>
     </div>
 
     <div class="video-container">
       <video id="video" playsinline autoplay></video>
       <div class="scan-overlay" id="scanOverlay">
+        <div class="scan-frame"></div>
         <div class="scan-line" id="scanLine"></div>
       </div>
       <div class="scanned-data-overlay" id="scannedDataOverlay"></div>
@@ -426,22 +493,18 @@
 
     // Initialize webhook history display
     function initWebhookHistory() {
-      // Load current webhook URL if exists
       if (webhookUrl) {
         webhookUrlInput.value = webhookUrl;
       }
       
-      // Populate history dropdown
       updateWebhookHistoryDisplay();
       
-      // Show history when input is focused
       webhookUrlInput.addEventListener('focus', () => {
         if (webhookHistory.length > 0) {
           webhookHistoryElem.classList.add('show');
         }
       });
       
-      // Hide history when clicking outside
       document.addEventListener('click', (e) => {
         if (!webhookUrlInput.contains(e.target) && !webhookHistoryElem.contains(e.target)) {
           webhookHistoryElem.classList.remove('show');
@@ -449,7 +512,6 @@
       });
     }
 
-    // Update webhook history display
     function updateWebhookHistoryDisplay() {
       webhookHistoryElem.innerHTML = '';
       
@@ -463,7 +525,6 @@
         return;
       }
       
-      // Show most recent first (limit to 5)
       const recentHistory = webhookHistory.slice(0, 5);
       
       recentHistory.forEach(url => {
@@ -479,29 +540,20 @@
       });
     }
 
-    // Add URL to webhook history
     function addToWebhookHistory(url) {
       if (!url || url.trim() === '') return;
       
-      // Remove if already exists (to avoid duplicates)
       webhookHistory = webhookHistory.filter(item => item !== url);
-      
-      // Add to beginning (most recent first)
       webhookHistory.unshift(url);
       
-      // Limit history to 10 items
       if (webhookHistory.length > 10) {
         webhookHistory = webhookHistory.slice(0, 10);
       }
       
-      // Save to localStorage
       localStorage.setItem("webhookHistory", JSON.stringify(webhookHistory));
-      
-      // Update display
       updateWebhookHistoryDisplay();
     }
 
-    // Create barcode scanner beep sound
     const audioContext = new (window.AudioContext || window.webkitAudioContext)();
     function playBeep() {
       try {
@@ -524,21 +576,18 @@
       }
     }
 
-    // Check if animation is running
     function isAnimationRunning() {
       const animation = getComputedStyle(scanLine).animationName;
       const playState = getComputedStyle(scanLine).animationPlayState;
       return animation !== 'none' && playState === 'running';
     }
 
-    // Start animation monitoring
     function startAnimationMonitoring() {
       if (animationCheckInterval) clearInterval(animationCheckInterval);
       
       animationCheckInterval = setInterval(() => {
         const isRunning = isAnimationRunning();
         
-        // Show/hide refresh button based on animation state
         if (scanning && !isRunning && scanOverlay.classList.contains('active')) {
           refreshScannerBtn.style.display = 'inline-block';
           console.warn('Scanner animation stopped unexpectedly');
@@ -550,7 +599,6 @@
       }, 1000);
     }
 
-    // Stop animation monitoring
     function stopAnimationMonitoring() {
       if (animationCheckInterval) {
         clearInterval(animationCheckInterval);
@@ -559,23 +607,19 @@
       refreshScannerBtn.style.display = 'none';
     }
 
-    // Refresh scanner function
     function refreshScanner() {
       console.log("Refreshing scanner...");
       showNotification("🔄 Refreshing scanner...", false);
       
-      // Stop current scanning
       if (scanning) {
         stopScanning();
       }
       
-      // Restart after a brief delay
       setTimeout(() => {
         startBtn.click();
       }, 500);
     }
 
-    // Update scan data display
     function updateScanDisplay() {
       if (currentScanData) {
         scanDataElem.textContent = currentScanData;
@@ -586,23 +630,19 @@
       }
     }
 
-    // Clear current scan data
     function clearScanData() {
       currentScanData = null;
       updateScanDisplay();
       showNotification("Scan data cleared");
     }
 
-    // Request notification permission
     if ("Notification" in window && Notification.permission === "default") {
       Notification.requestPermission();
     }
 
-    // Load saved webhook URL and initialize history
     webhookUrlInput.value = webhookUrl;
     initWebhookHistory();
 
-    // Update online status
     function updateOnlineStatus() {
       onlineStatus.className = "status-indicator " + (navigator.onLine ? "online" : "offline");
     }
@@ -610,23 +650,18 @@
     window.addEventListener("online", updateOnlineStatus);
     window.addEventListener("offline", updateOnlineStatus);
 
-    // Save settings button - UPDATED to save to history
     saveSettingsBtn.addEventListener("click", () => {
       const newUrl = webhookUrlInput.value.trim();
       webhookUrl = newUrl;
       localStorage.setItem("webhookUrl", newUrl);
       
-      // Add to webhook history
       addToWebhookHistory(newUrl);
       
       showNotification("✅ Settings saved!", false);
       console.log("Webhook URL saved:", newUrl);
     });
 
-    // Refresh scanner button
     refreshScannerBtn.addEventListener("click", refreshScanner);
-
-    // Clear scan data button
     clearScanBtn.addEventListener("click", clearScanData);
 
     async function sendScanData(scanData) {
@@ -684,7 +719,6 @@
         return;
       }
 
-      // Clear previous scan data when starting new session
       clearScanData();
       
       scanning = true;
@@ -694,15 +728,15 @@
       statusElem.textContent = "Requesting camera access...";
 
       try {
-        // SIMPLIFIED camera settings for better compatibility
+        // ENHANCED camera settings for better capture
         videoStream = await navigator.mediaDevices.getUserMedia({ 
           video: { 
             facingMode: "environment",
-            // Use more compatible settings that work with ZXing
-            width: { ideal: 1280 },
-            height: { ideal: 720 },
-            frameRate: { ideal: 30 }
-            // Remove advanced settings that might cause issues
+            width: { ideal: 1920, min: 640 },
+            height: { ideal: 1080, min: 480 },
+            frameRate: { ideal: 60, min: 15 },
+            aspectRatio: { ideal: 16/9 },
+            focusMode: "continuous"
           } 
         });
         
@@ -710,33 +744,46 @@
         videoElem.classList.add("active");
         scanOverlay.classList.add("active");
         
-        // Ensure scan line animation is running
         scanLine.classList.remove("paused");
         
         statusElem.textContent = "Camera ready. Point at barcode...";
 
-        // Start animation monitoring
         startAnimationMonitoring();
 
         codeReader = new ZXing.BrowserMultiFormatReader();
         
-        // Enhanced ZXing hints for better QR code detection
+        // ENHANCED ZXing hints for maximum compatibility
         codeReader.hints = new Map([
           [ZXing.DecodeHintType.TRY_HARDER, true],
           [ZXing.DecodeHintType.PURE_BARCODE, false],
-          [ZXing.DecodeHintType.POSSIBLE_FORMATS, [ZXing.BarcodeFormat.QR_CODE]]
+          [ZXing.DecodeHintType.ASSUME_GS1, false],
+          [ZXing.DecodeHintType.POSSIBLE_FORMATS, [
+            ZXing.BarcodeFormat.QR_CODE,
+            ZXing.BarcodeFormat.EAN_13,
+            ZXing.BarcodeFormat.EAN_8,
+            ZXing.BarcodeFormat.CODE_128,
+            ZXing.BarcodeFormat.CODE_39,
+            ZXing.BarcodeFormat.UPC_A,
+            ZXing.BarcodeFormat.UPC_E,
+            ZXing.BarcodeFormat.ITF,
+            ZXing.BarcodeFormat.DATA_MATRIX,
+            ZXing.BarcodeFormat.PDF_417,
+            ZXing.BarcodeFormat.AZTEC,
+            ZXing.BarcodeFormat.CODABAR
+          ]]
         ]);
 
-        // Configure scanner for better performance
+        // Enhanced timing settings for better detection
+        codeReader.timeBetweenDecodingAttempts = 100;
+        codeReader.timeBetweenScansMillis = 50;
+
         codeReader.decodeFromVideoDevice(undefined, 'video', async (result, err) => {
           if (result && scanning) {
             const code = result.text;
             
-            // Immediately stop scanning completely
             scanning = false;
             scanLine.classList.add("paused");
             
-            // Stop the ZXing decoder
             if (codeReader) {
               codeReader.reset();
               codeReader = null;
@@ -752,27 +799,23 @@
               sent: false
             };
             
-            statusElem.textContent = `✅ Scan Complete!`;
+            statusElem.textContent = `✅ Scan Complete! Type: ${result.format || 'Unknown'}`;
             
             playBeep();
             
-            showNotification(`✅ Barcode Scanned!`);
+            showNotification(`✅ ${result.format || 'Barcode'} Scanned!`);
             
-            // Store and display current scan data
             currentScanData = code;
             updateScanDisplay();
             
-            // Send to webhook if configured
             if (navigator.onLine && webhookUrl) {
               await sendScanData(data);
             }
             
-            // Clear any existing restart timeout
             if (restartTimeout) {
               clearTimeout(restartTimeout);
             }
             
-            // Set up auto-restart after 1.5 seconds
             restartTimeout = setTimeout(() => {
               scannedDataOverlay.classList.remove("show");
               startBtn.style.display = "inline-block";
@@ -804,10 +847,8 @@
       stopBtn.style.display = "none";
       refreshScannerBtn.style.display = "none";
       
-      // Stop animation monitoring
       stopAnimationMonitoring();
       
-      // Clear any pending restart timeout
       if (restartTimeout) {
         clearTimeout(restartTimeout);
         restartTimeout = null;
@@ -864,7 +905,6 @@
       });
     });
 
-    // Initialize scan display
     updateScanDisplay();
   </script>
 </body>
