@@ -7,6 +7,7 @@
   <link rel="manifest" href="manifest.json" />
   <meta name="theme-color" content="#0066cc" />
   <style>
+    /* Your existing CSS remains the same */
     body {
       font-family: Arial, sans-serif;
       text-align: center;
@@ -693,16 +694,15 @@
       statusElem.textContent = "Requesting camera access...";
 
       try {
-        // Enhanced camera settings for better dense barcode scanning
+        // SIMPLIFIED camera settings for better compatibility
         videoStream = await navigator.mediaDevices.getUserMedia({ 
           video: { 
             facingMode: "environment",
-            width: { ideal: 4096, max: 4096 },
-            height: { ideal: 2160, max: 2160 },
-            frameRate: { ideal: 60 },
-            focusMode: "continuous",
-            exposureMode: "continuous",
-            whiteBalanceMode: "continuous"
+            // Use more compatible settings that work with ZXing
+            width: { ideal: 1280 },
+            height: { ideal: 720 },
+            frameRate: { ideal: 30 }
+            // Remove advanced settings that might cause issues
           } 
         });
         
@@ -723,10 +723,11 @@
         // Enhanced ZXing hints for better QR code detection
         codeReader.hints = new Map([
           [ZXing.DecodeHintType.TRY_HARDER, true],
-          [ZXing.DecodeHintType.PURE_BARCODE, false]
+          [ZXing.DecodeHintType.PURE_BARCODE, false],
+          [ZXing.DecodeHintType.POSSIBLE_FORMATS, [ZXing.BarcodeFormat.QR_CODE]]
         ]);
 
-        // Configure scanner for better performance with dense barcodes
+        // Configure scanner for better performance
         codeReader.decodeFromVideoDevice(undefined, 'video', async (result, err) => {
           if (result && scanning) {
             const code = result.text;
