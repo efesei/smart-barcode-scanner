@@ -1,460 +1,69 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Deft Barcode Scanner</title>
-  <link rel="manifest" href="manifest.json" />
-  <meta name="theme-color" content="#0066cc" />
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      text-align: center;
-      margin: 0;
-      padding: 1rem;
-      background: #f5f5f5;
-      display: flex;
-      flex-direction: column;
-      min-height: 100vh;
-    }
-    
-    .main-content {
-      flex: 1;
-    }
-    
-    .app-header {
-      margin-bottom: 1rem;
-    }
-    
-    .app-title {
-      font-size: 1.5rem;
-      font-weight: bold;
-      color: #0066cc;
-      margin: 0;
-    }
-    
-    .app-author {
-      font-size: 0.8rem;
-      color: #666;
-      margin: 0;
-    }
-    
-    .scanner-container {
-      position: relative;
-      width: 100%;
-      max-width: 600px;
-      margin: 1rem auto;
-      border-radius: 10px;
-      overflow: hidden;
-      background: #000;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-    }
-    
-    #reader {
-      width: 100%;
-      border-radius: 10px;
-    }
+const statusElem = document.getElementById("status");
+const startBtn = document.getElementById("startBtn");
+const stopBtn = document.getElementById("stopBtn");
+const webhookUrlInput = document.getElementById("webhookUrl");
+const webhookHistoryElem = document.getElementById("webhookHistory");
+const saveSettingsBtn = document.getElementById("saveSettings");
+const onlineStatus = document.getElementById("onlineStatus");
+const scanDataElem = document.getElementById("scanData");
+const clearScanBtn = document.getElementById("clearScanBtn");
+const currentYearElem = document.getElementById("currentYear");
+const permissionHelp = document.getElementById("permissionHelp");
 
-    /* Hide html5-qrcode's default button styling */
-    #reader button {
-      display: none !important;
-    }
+currentYearElem.textContent = new Date().getFullYear();
 
-    #reader video {
-      border-radius: 10px;
-    }
-    
-    button {
-      margin-top: 1rem;
-      padding: 10px 20px;
-      font-size: 16px;
-      border: none;
-      border-radius: 6px;
-      background: #0066cc;
-      color: white;
-      cursor: pointer;
-    }
-    button:disabled {
-      background: #aaa;
-      cursor: not-allowed;
-    }
-    button.stop {
-      background: #e74c3c;
-    }
-    
-    #settings {
-      margin-top: 1.5rem;
-      text-align: left;
-      max-width: 600px;
-      margin-inline: auto;
-      background: white;
-      padding: 1rem;
-      border-radius: 8px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    }
-    
-    #currentScan {
-      margin-top: 1.5rem;
-      text-align: left;
-      max-width: 600px;
-      margin-inline: auto;
-      background: white;
-      padding: 1rem;
-      border-radius: 8px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    }
-    
-    .scan-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 10px;
-    }
-    
-    .clear-scan-btn {
-      background: #e74c3c !important;
-      color: white !important;
-      padding: 8px 16px !important;
-      font-size: 14px !important;
-      border-radius: 4px !important;
-      margin-top: 0 !important;
-    }
-    
-    .scan-data {
-      background: #f8f9fa;
-      border: 1px solid #e9ecef;
-      border-radius: 6px;
-      padding: 15px;
-      font-family: 'Courier New', monospace;
-      font-size: 14px;
-      text-align: left;
-      word-break: break-all;
-      white-space: pre-wrap;
-      max-height: 200px;
-      overflow-y: auto;
-      margin-top: 10px;
-    }
-    
-    .scan-data.empty {
-      color: #6c757d;
-      font-style: italic;
-      text-align: center;
-    }
-    
-    .webhook-input-container {
-      position: relative;
-      margin-bottom: 10px;
-    }
-    
-    input[type="text"] {
-      width: 100%;
-      padding: 8px;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-      font-size: 14px;
-      box-sizing: border-box;
-    }
-    
-    .webhook-history {
-      position: absolute;
-      top: 100%;
-      left: 0;
-      right: 0;
-      background: white;
-      border: 1px solid #ddd;
-      border-top: none;
-      border-radius: 0 0 4px 4px;
-      max-height: 150px;
-      overflow-y: auto;
-      z-index: 10;
-      display: none;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    }
-    
-    .webhook-history.show {
-      display: block;
-    }
-    
-    .webhook-history-item {
-      padding: 8px 12px;
-      cursor: pointer;
-      border-bottom: 1px solid #f0f0f0;
-      text-align: left;
-      font-size: 14px;
-    }
-    
-    .webhook-history-item:hover {
-      background: #f5f5f5;
-    }
-    
-    .webhook-history-item:last-child {
-      border-bottom: none;
-    }
-    
-    .history-hint {
-      font-size: 12px;
-      color: #666;
-      margin-top: 5px;
-    }
-    
-    label {
-      display: block;
-      margin-bottom: 5px;
-      font-weight: bold;
-      color: #333;
-    }
-    
-    .settings-group {
-      margin-bottom: 1rem;
-    }
-    
-    .status-indicator {
-      display: inline-block;
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      margin-left: 8px;
-    }
-    .status-indicator.online {
-      background: #00b894;
-    }
-    .status-indicator.offline {
-      background: #d63031;
-    }
-    
-    .notification {
-      position: fixed;
-      top: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: #00b894;
-      color: white;
-      padding: 15px 25px;
-      border-radius: 8px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-      z-index: 10000;
-      animation: slideDown 0.3s ease-out;
-      max-width: 90%;
-      text-align: center;
-    }
-    .notification.error {
-      background: #e74c3c;
-    }
-    
-    @keyframes slideDown {
-      from {
-        opacity: 0;
-        transform: translateX(-50%) translateY(-20px);
-      }
-      to {
-        opacity: 1;
-        transform: translateX(-50%) translateY(0);
-      }
-    }
-    
-    .copyright-footer {
-      margin-top: 2rem;
-      padding: 1rem;
-      color: #666;
-      font-size: 0.8rem;
-      border-top: 1px solid #ddd;
-    }
-    
-    .copyright-footer a {
-      color: #0066cc;
-      text-decoration: none;
-    }
-    
-    .copyright-footer a:hover {
-      text-decoration: underline;
-    }
+let scanning = false;
+let currentScanData = null;
+let webhookUrl = localStorage.getItem("webhookUrl") || "";
+let webhookHistory = JSON.parse(localStorage.getItem("webhookHistory") || "[]");
+let html5QrCode = null;
+let hasCameraPermission = false;
 
-    .scan-tips {
-      background: #fff3cd;
-      border: 1px solid #ffc107;
-      border-radius: 6px;
-      padding: 10px;
-      margin-top: 10px;
-      font-size: 12px;
-      color: #856404;
-      text-align: left;
+// Check camera permission on page load
+async function checkCameraPermission() {
+    try {
+        // Try to enumerate devices to trigger permission prompt early
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const videoDevices = devices.filter(device => device.kind === 'videoinput');
+        hasCameraPermission = videoDevices.some(device => device.deviceId !== '');
+        
+        if (!hasCameraPermission) {
+            console.log("Camera permission not yet granted");
+            permissionHelp.classList.add("show");
+        }
+    } catch (error) {
+        console.log("Camera permission check failed:", error);
+        permissionHelp.classList.add("show");
     }
+}
 
-    .scan-tips ul {
-      margin: 5px 0;
-      padding-left: 20px;
-    }
+// Initialize camera permission check
+checkCameraPermission();
 
-    .scan-tips li {
-      margin: 3px 0;
-    }
-
-    .library-info {
-      background: #e7f3ff;
-      border: 1px solid #0066cc;
-      border-radius: 6px;
-      padding: 10px;
-      margin-top: 10px;
-      font-size: 12px;
-      color: #004085;
-      text-align: left;
-    }
-
-    .permission-help {
-      background: #ffe7e7;
-      border: 1px solid #e74c3c;
-      border-radius: 6px;
-      padding: 10px;
-      margin-top: 10px;
-      font-size: 12px;
-      color: #721c24;
-      display: none;
-    }
-
-    .permission-help.show {
-      display: block;
-    }
-
-    .permission-help strong {
-      display: block;
-      margin-bottom: 5px;
-    }
-
-    .permission-help ol {
-      margin: 5px 0;
-      padding-left: 20px;
-    }
-
-    .permission-help li {
-      margin: 3px 0;
-    }
-  </style>
-</head>
-<body>
-  <div class="main-content">
-    <div class="app-header">
-      <h1 class="app-title">Deft Barcode Scanner</h1>
-      <p class="app-author">by Deftmind Technology and Media Ventures</p>
-    </div>
-    
-    <div id="settings">
-      <h3>⚙️ Settings</h3>
-      <div class="settings-group">
-        <label for="webhookUrl">Webhook URL:</label>
-        <div class="webhook-input-container">
-          <input type="text" id="webhookUrl" placeholder="https://your-webhook-url.com/endpoint" />
-          <div class="webhook-history" id="webhookHistory"></div>
-        </div>
-        <div class="history-hint">Click to see previously used webhooks</div>
-      </div>
-      <button id="saveSettings">💾 Save Settings</button>
-      
-      <div class="library-info">
-        <strong>🚀 Powered by html5-qrcode</strong><br>
-        Advanced scanning library with superior dense QR code detection
-      </div>
-
-      <div class="permission-help" id="permissionHelp">
-        <strong>📷 Camera Access Denied?</strong>
-        <ol>
-          <li>Look for the <strong>camera/lock icon</strong> in your browser's address bar</li>
-          <li>Tap/click it and change Camera to <strong>"Allow"</strong></li>
-          <li>Refresh this page or tap "Start Scanner" again</li>
-        </ol>
-        <p style="margin: 5px 0 0 0;"><strong>iPhone/iPad:</strong> Go to Settings → Safari/Chrome → Enable Camera</p>
-      </div>
-      
-      <div class="scan-tips">
-        <strong>📋 Scanning Tips for Dense QR Codes:</strong>
-        <ul>
-          <li><strong>Distance:</strong> Hold 6-10 inches away for dense QR codes</li>
-          <li><strong>Lighting:</strong> Use bright, even lighting (avoid shadows)</li>
-          <li><strong>Steadiness:</strong> Keep very steady for 2-3 seconds</li>
-          <li><strong>Position:</strong> Hold phone flat and parallel to the QR code (not tilted)</li>
-          <li><strong>Fill Frame:</strong> QR code should fill most of the camera view</li>
-        </ul>
-        <strong>⚙️ Camera Access Issues?</strong>
-        <ul>
-          <li><strong>Browser Settings Control Camera:</strong> This is a web app - camera permissions are managed by your browser, not the app</li>
-          <li><strong>Check Address Bar:</strong> Look for camera/lock icon and ensure camera is set to "Allow"</li>
-          <li><strong>Try Refreshing:</strong> After changing settings, refresh the page completely</li>
-          <li><strong>Try Different Browser:</strong> If issues persist, try Chrome, Firefox, or Safari</li>
-          <li><strong>HTTPS Required:</strong> Make sure the page URL starts with "https://" (secure connection)</li>
-          <li><strong>Restart Browser:</strong> Close and reopen your browser app completely</li>
-        </ul>
-      </div>
-    </div>
-
-    <div class="scanner-container">
-      <div id="reader"></div>
-    </div>
-    
-    <p id="status">Configure webhook URL and tap "Start Scanner" to begin.<span class="status-indicator" id="onlineStatus"></span></p>
-    <button id="startBtn">📷 Start Scanner</button>
-    <button id="stopBtn" class="stop" style="display:none;">⏹️ Stop Scanner</button>
-
-    <div id="currentScan">
-      <div class="scan-header">
-        <h3>📄 Current Scan</h3>
-        <button id="clearScanBtn" class="clear-scan-btn">🗑️ Clear Data</button>
-      </div>
-      <div class="scan-data empty" id="scanData">No data scanned yet.</div>
-    </div>
-  </div>
-
-  <div class="copyright-footer">
-    Copyright © <span id="currentYear">2025</span>. 
-    <a href="https://deftmindai.com/welcome-to-deftmind-technology-and-media-ventures/" target="_blank">
-      Deftmind Technology and Media Ventures
-    </a>
-  </div>
-
-  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
-  <script>
-    const statusElem = document.getElementById("status");
-    const startBtn = document.getElementById("startBtn");
-    const stopBtn = document.getElementById("stopBtn");
-    const webhookUrlInput = document.getElementById("webhookUrl");
-    const webhookHistoryElem = document.getElementById("webhookHistory");
-    const saveSettingsBtn = document.getElementById("saveSettings");
-    const onlineStatus = document.getElementById("onlineStatus");
-    const scanDataElem = document.getElementById("scanData");
-    const clearScanBtn = document.getElementById("clearScanBtn");
-    const currentYearElem = document.getElementById("currentYear");
-    const permissionHelp = document.getElementById("permissionHelp");
-
-    currentYearElem.textContent = new Date().getFullYear();
-
-    let scanning = false;
-    let currentScanData = null;
-    let webhookUrl = localStorage.getItem("webhookUrl") || "";
-    let webhookHistory = JSON.parse(localStorage.getItem("webhookHistory") || "[]");
-    let html5QrCode = null;
-
-    function initWebhookHistory() {
-      if (webhookUrl) {
+function initWebhookHistory() {
+    if (webhookUrl) {
         webhookUrlInput.value = webhookUrl;
-      }
-      
-      updateWebhookHistoryDisplay();
-      
-      webhookUrlInput.addEventListener('focus', () => {
-        if (webhookHistory.length > 0) {
-          webhookHistoryElem.classList.add('show');
-        }
-      });
-      
-      document.addEventListener('click', (e) => {
-        if (!webhookUrlInput.contains(e.target) && !webhookHistoryElem.contains(e.target)) {
-          webhookHistoryElem.classList.remove('show');
-        }
-      });
     }
+    
+    updateWebhookHistoryDisplay();
+    
+    webhookUrlInput.addEventListener('focus', () => {
+        if (webhookHistory.length > 0) {
+            webhookHistoryElem.classList.add('show');
+        }
+    });
+    
+    document.addEventListener('click', (e) => {
+        if (!webhookUrlInput.contains(e.target) && !webhookHistoryElem.contains(e.target)) {
+            webhookHistoryElem.classList.remove('show');
+        }
+    });
+}
 
-    function updateWebhookHistoryDisplay() {
-      webhookHistoryElem.innerHTML = '';
-      
-      if (webhookHistory.length === 0) {
+function updateWebhookHistoryDisplay() {
+    webhookHistoryElem.innerHTML = '';
+    
+    if (webhookHistory.length === 0) {
         const emptyItem = document.createElement('div');
         emptyItem.className = 'webhook-history-item';
         emptyItem.textContent = 'No previous webhooks';
@@ -462,40 +71,40 @@
         emptyItem.style.fontStyle = 'italic';
         webhookHistoryElem.appendChild(emptyItem);
         return;
-      }
-      
-      const recentHistory = webhookHistory.slice(0, 5);
-      
-      recentHistory.forEach(url => {
+    }
+    
+    const recentHistory = webhookHistory.slice(0, 5);
+    
+    recentHistory.forEach(url => {
         const item = document.createElement('div');
         item.className = 'webhook-history-item';
         item.textContent = url;
         item.addEventListener('click', () => {
-          webhookUrlInput.value = url;
-          webhookHistoryElem.classList.remove('show');
-          webhookUrlInput.focus();
+            webhookUrlInput.value = url;
+            webhookHistoryElem.classList.remove('show');
+            webhookUrlInput.focus();
         });
         webhookHistoryElem.appendChild(item);
-      });
-    }
+    });
+}
 
-    function addToWebhookHistory(url) {
-      if (!url || url.trim() === '') return;
-      
-      webhookHistory = webhookHistory.filter(item => item !== url);
-      webhookHistory.unshift(url);
-      
-      if (webhookHistory.length > 10) {
+function addToWebhookHistory(url) {
+    if (!url || url.trim() === '') return;
+    
+    webhookHistory = webhookHistory.filter(item => item !== url);
+    webhookHistory.unshift(url);
+    
+    if (webhookHistory.length > 10) {
         webhookHistory = webhookHistory.slice(0, 10);
-      }
-      
-      localStorage.setItem("webhookHistory", JSON.stringify(webhookHistory));
-      updateWebhookHistoryDisplay();
     }
+    
+    localStorage.setItem("webhookHistory", JSON.stringify(webhookHistory));
+    updateWebhookHistoryDisplay();
+}
 
-    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-    function playBeep() {
-      try {
+const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+function playBeep() {
+    try {
         const oscillator = audioContext.createOscillator();
         const gainNode = audioContext.createGain();
         
@@ -510,198 +119,219 @@
         
         oscillator.start(audioContext.currentTime);
         oscillator.stop(audioContext.currentTime + 0.1);
-      } catch (e) {
+    } catch (e) {
         console.log("Audio context error:", e);
-      }
     }
+}
 
-    function updateScanDisplay() {
-      if (currentScanData) {
+function updateScanDisplay() {
+    if (currentScanData) {
         scanDataElem.textContent = currentScanData;
         scanDataElem.classList.remove('empty');
-      } else {
+    } else {
         scanDataElem.textContent = "No data scanned yet.";
         scanDataElem.classList.add('empty');
-      }
     }
+}
 
-    function clearScanData() {
-      currentScanData = null;
-      updateScanDisplay();
-      showNotification("Scan data cleared");
-    }
+function clearScanData() {
+    currentScanData = null;
+    updateScanDisplay();
+    showNotification("Scan data cleared");
+}
 
-    if ("Notification" in window && Notification.permission === "default") {
-      Notification.requestPermission();
-    }
+if ("Notification" in window && Notification.permission === "default") {
+    Notification.requestPermission();
+}
 
-    webhookUrlInput.value = webhookUrl;
-    initWebhookHistory();
+webhookUrlInput.value = webhookUrl;
+initWebhookHistory();
 
-    function updateOnlineStatus() {
-      onlineStatus.className = "status-indicator " + (navigator.onLine ? "online" : "offline");
-    }
-    updateOnlineStatus();
-    window.addEventListener("online", updateOnlineStatus);
-    window.addEventListener("offline", updateOnlineStatus);
+function updateOnlineStatus() {
+    onlineStatus.className = "status-indicator " + (navigator.onLine ? "online" : "offline");
+}
+updateOnlineStatus();
+window.addEventListener("online", updateOnlineStatus);
+window.addEventListener("offline", updateOnlineStatus);
 
-    saveSettingsBtn.addEventListener("click", () => {
-      const newUrl = webhookUrlInput.value.trim();
-      webhookUrl = newUrl;
-      localStorage.setItem("webhookUrl", newUrl);
-      
-      addToWebhookHistory(newUrl);
-      
-      showNotification("✅ Settings saved!", false);
-      console.log("Webhook URL saved:", newUrl);
-    });
+saveSettingsBtn.addEventListener("click", () => {
+    const newUrl = webhookUrlInput.value.trim();
+    webhookUrl = newUrl;
+    localStorage.setItem("webhookUrl", newUrl);
+    
+    addToWebhookHistory(newUrl);
+    
+    showNotification("✅ Settings saved!", false);
+    console.log("Webhook URL saved:", newUrl);
+});
 
-    clearScanBtn.addEventListener("click", clearScanData);
+clearScanBtn.addEventListener("click", clearScanData);
 
-    async function sendScanData(scanData) {
-      if (!navigator.onLine || !webhookUrl) return;
-      
-      try {
+async function sendScanData(scanData) {
+    if (!navigator.onLine || !webhookUrl) return;
+    
+    try {
         const payload = {
-          barcode_data: scanData.barcode_data,
-          timestamp: scanData.timestamp,
-          scanned_at: scanData.timestamp,
-          code_type: scanData.code_type || "QR_CODE"
+            barcode_data: scanData.barcode_data,
+            timestamp: scanData.timestamp,
+            scanned_at: scanData.timestamp,
+            code_type: scanData.code_type || "QR_CODE"
         };
 
         console.log("Sending to webhook:", JSON.stringify(payload, null, 2));
 
         const res = await fetch(webhookUrl, {
-          method: "POST",
-          headers: {"Content-Type": "application/json"},
-          body: JSON.stringify(payload)
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify(payload)
         });
         
         console.log("Webhook response:", res.status, res.statusText);
         
         if (res.ok) {
-          showNotification("✅ Data sent to webhook!");
+            showNotification("✅ Data sent to webhook!");
         } else {
-          showNotification("⚠️ Webhook error: " + res.status, true);
+            showNotification("⚠️ Webhook error: " + res.status, true);
         }
-      } catch (err) { 
+    } catch (err) { 
         console.error("Send error:", err);
         showNotification("⚠️ Failed to send data", true);
-      }
     }
+}
 
-    function showNotification(message, isError = false) {
-      if ("Notification" in window && Notification.permission === "granted") {
+function showNotification(message, isError = false) {
+    if ("Notification" in window && Notification.permission === "granted") {
         new Notification("Deft Barcode Scanner", {
-          body: message,
-          icon: "https://cdn-icons-png.flaticon.com/512/864/864685.png"
+            body: message,
+            icon: "https://cdn-icons-png.flaticon.com/512/864/864685.png"
         });
-      }
-
-      const notif = document.createElement("div");
-      notif.className = "notification" + (isError ? " error" : "");
-      notif.textContent = message;
-      document.body.appendChild(notif);
-      setTimeout(() => notif.remove(), 3000);
     }
 
-    // Success callback for scanning
-    async function onScanSuccess(decodedText, decodedResult) {
-      if (!scanning) return;
-      
-      console.log("Scan successful:", decodedText);
-      console.log("Format:", decodedResult.result.format);
-      
-      // Stop scanning immediately
-      scanning = false;
-      stopBtn.click();
-      
-      playBeep();
-      
-      const data = {
+    const notif = document.createElement("div");
+    notif.className = "notification" + (isError ? " error" : "");
+    notif.textContent = message;
+    document.body.appendChild(notif);
+    setTimeout(() => notif.remove(), 3000);
+}
+
+// Success callback for scanning
+async function onScanSuccess(decodedText, decodedResult) {
+    if (!scanning) return;
+    
+    console.log("Scan successful:", decodedText);
+    console.log("Format:", decodedResult.result.format);
+    
+    // Stop scanning immediately
+    scanning = false;
+    stopBtn.click();
+    
+    playBeep();
+    
+    const data = {
         barcode_data: decodedText,
         timestamp: new Date().toISOString(),
         code_type: decodedResult.result.format?.formatName || "QR_CODE",
         sent: false
-      };
-      
-      statusElem.textContent = `✅ Scan Complete! Type: ${data.code_type}`;
-      
-      showNotification(`✅ ${data.code_type} Scanned!`);
-      
-      currentScanData = decodedText;
-      updateScanDisplay();
-      
-      if (navigator.onLine && webhookUrl) {
+    };
+    
+    statusElem.textContent = `✅ Scan Complete! Type: ${data.code_type}`;
+    
+    showNotification(`✅ ${data.code_type} Scanned!`);
+    
+    currentScanData = decodedText;
+    updateScanDisplay();
+    
+    if (navigator.onLine && webhookUrl) {
         await sendScanData(data);
-      }
-      
-      setTimeout(() => {
+    }
+    
+    setTimeout(() => {
         statusElem.textContent = "Tap 'Start Scanner' to scan next item.";
-      }, 2000);
-    }
+    }, 2000);
+}
 
-    // Error callback (optional, for debugging)
-    function onScanError(errorMessage) {
-      // Ignore common "not found" errors - they're expected during scanning
-      // Only log actual errors
-      if (!errorMessage.includes("NotFoundException")) {
+// Improved error callback
+function onScanError(errorMessage) {
+    // Ignore common "not found" errors - they're expected during scanning
+    if (!errorMessage.includes("NotFoundException")) {
         console.warn("Scan error:", errorMessage);
-      }
+        
+        // Check for permission-related errors
+        if (errorMessage.includes("permission") || errorMessage.includes("NotAllowedError")) {
+            statusElem.textContent = "❌ Camera permission denied. Please allow camera access.";
+            permissionHelp.classList.add("show");
+            stopBtn.click();
+        }
     }
+}
 
-    startBtn.addEventListener("click", async () => {
-      if (scanning) return;
-      
-      if (!webhookUrl) {
+startBtn.addEventListener("click", async () => {
+    if (scanning) return;
+    
+    if (!webhookUrl) {
         showNotification("⚠️ Please configure webhook URL first!", true);
         return;
-      }
+    }
 
-      clearScanData();
-      
-      scanning = true;
-      startBtn.style.display = "none";
-      stopBtn.style.display = "inline-block";
-      statusElem.textContent = "Starting scanner...";
+    clearScanData();
+    
+    scanning = true;
+    startBtn.style.display = "none";
+    stopBtn.style.display = "inline-block";
+    statusElem.textContent = "Requesting camera access...";
 
-      try {
+    try {
         html5QrCode = new Html5Qrcode("reader");
         
-        // First, try to get list of cameras (this also requests permission)
+        // First, check if we can access cameras
         let cameras;
         try {
-          cameras = await Html5Qrcode.getCameras();
-          console.log("Available cameras:", cameras);
-          
-          if (!cameras || cameras.length === 0) {
-            throw new Error("No cameras found on device");
-          }
+            // This will trigger permission prompt if not already granted
+            cameras = await Html5Qrcode.getCameras();
+            console.log("Available cameras:", cameras);
+            
+            if (!cameras || cameras.length === 0) {
+                throw new Error("No cameras found on device");
+            }
+            
+            hasCameraPermission = true;
+            permissionHelp.classList.remove("show");
+            
         } catch (cameraError) {
-          console.error("Camera enumeration error:", cameraError);
-          throw new Error("Cannot access camera. Please check browser permissions in Android Settings → Apps → Browser → Permissions → Camera");
+            console.error("Camera access error:", cameraError);
+            
+            if (cameraError.name === 'NotAllowedError' || 
+                cameraError.message.includes('permission') ||
+                cameraError.message.includes('NotAllowed')) {
+                
+                statusElem.textContent = "❌ Camera permission denied. Please allow camera access in browser settings.";
+                permissionHelp.classList.add("show");
+                throw new Error("Camera permission denied by user");
+            } else {
+                throw cameraError;
+            }
         }
         
         // OPTIMIZED configuration for dense QR codes
         const config = {
-          fps: 30,  // Frames per second - balanced for performance
-          qrbox: { width: 300, height: 300 },  // Scanning box size
-          aspectRatio: 1.0,  // Square aspect for QR codes
-          formatsToSupport: [
-            Html5QrcodeSupportedFormats.QR_CODE,
-            Html5QrcodeSupportedFormats.DATA_MATRIX,
-            Html5QrcodeSupportedFormats.AZTEC,
-            Html5QrcodeSupportedFormats.PDF_417,
-            Html5QrcodeSupportedFormats.EAN_13,
-            Html5QrcodeSupportedFormats.EAN_8,
-            Html5QrcodeSupportedFormats.CODE_128,
-            Html5QrcodeSupportedFormats.CODE_39,
-            Html5QrcodeSupportedFormats.UPC_A,
-            Html5QrcodeSupportedFormats.UPC_E
-          ],
-          experimentalFeatures: {
-            useBarCodeDetectorIfSupported: true  // Use native browser API if available
-          }
+            fps: 30,
+            qrbox: { width: 300, height: 300 },
+            aspectRatio: 1.0,
+            formatsToSupport: [
+                Html5QrcodeSupportedFormats.QR_CODE,
+                Html5QrcodeSupportedFormats.DATA_MATRIX,
+                Html5QrcodeSupportedFormats.AZTEC,
+                Html5QrcodeSupportedFormats.PDF_417,
+                Html5QrcodeSupportedFormats.EAN_13,
+                Html5QrcodeSupportedFormats.EAN_8,
+                Html5QrcodeSupportedFormats.CODE_128,
+                Html5QrcodeSupportedFormats.CODE_39,
+                Html5QrcodeSupportedFormats.UPC_A,
+                Html5QrcodeSupportedFormats.UPC_E
+            ],
+            experimentalFeatures: {
+                useBarCodeDetectorIfSupported: true
+            }
         };
 
         // Try using specific camera ID (environment/back camera preferred)
@@ -709,72 +339,110 @@
         
         // If we got camera list, use the back camera
         if (cameras && cameras.length > 0) {
-          // Try to find back/environment camera
-          const backCamera = cameras.find(cam => 
-            cam.label && (cam.label.toLowerCase().includes('back') || 
-                         cam.label.toLowerCase().includes('environment') ||
-                         cam.label.toLowerCase().includes('rear'))
-          );
-          cameraId = backCamera ? backCamera.id : cameras[0].id;
-          console.log("Using camera:", cameraId);
+            // Try to find back/environment camera
+            const backCamera = cameras.find(cam => 
+                cam.label && (cam.label.toLowerCase().includes('back') || 
+                             cam.label.toLowerCase().includes('environment') ||
+                             cam.label.toLowerCase().includes('rear'))
+            );
+            cameraId = backCamera ? backCamera.id : cameras[0].id;
+            console.log("Using camera:", cameraId);
         }
 
-        await html5QrCode.start(
-          cameraId,
-          config,
-          onScanSuccess,
-          onScanError
-        );
+        statusElem.textContent = "Starting camera...";
         
-        // Hide permission help once camera starts successfully
-        permissionHelp.classList.remove("show");
+        await html5QrCode.start(
+            cameraId,
+            config,
+            onScanSuccess,
+            onScanError
+        );
         
         statusElem.textContent = "📷 Camera ready. Point at QR code or barcode...";
 
-      } catch (err) {
-        console.error("Camera error:", err);
-        statusElem.textContent = "❌ Camera access denied or unavailable.";
-        showNotification("⚠️ Please allow camera access!", true);
+    } catch (err) {
+        console.error("Scanner initialization error:", err);
         
-        // Show permission help
-        permissionHelp.classList.add("show");
+        let errorMessage = "❌ Camera access failed: ";
+        
+        if (err.message.includes('permission') || err.message.includes('NotAllowed')) {
+            errorMessage += "Permission denied. Please allow camera access.";
+            permissionHelp.classList.add("show");
+        } else if (err.message.includes('No cameras found')) {
+            errorMessage += "No camera found on this device.";
+        } else if (err.message.includes('Could not start video source')) {
+            errorMessage += "Camera is already in use by another application.";
+        } else {
+            errorMessage += err.message;
+        }
+        
+        statusElem.textContent = errorMessage;
+        showNotification("⚠️ " + errorMessage, true);
         
         scanning = false;
         startBtn.style.display = "inline-block";
         stopBtn.style.display = "none";
-      }
-    });
-
-    stopBtn.addEventListener("click", async () => {
-      if (!scanning && !html5QrCode) return;
-      
-      scanning = false;
-      startBtn.style.display = "inline-block";
-      stopBtn.style.display = "none";
-      
-      try {
+        
+        // Clean up
         if (html5QrCode) {
-          await html5QrCode.stop();
-          html5QrCode.clear();
-          html5QrCode = null;
+            try {
+                await html5QrCode.stop();
+                html5QrCode.clear();
+            } catch (stopError) {
+                console.log("Cleanup error:", stopError);
+            }
+            html5QrCode = null;
+        }
+    }
+});
+
+stopBtn.addEventListener("click", async () => {
+    if (!scanning && !html5QrCode) return;
+    
+    scanning = false;
+    startBtn.style.display = "inline-block";
+    stopBtn.style.display = "none";
+    
+    try {
+        if (html5QrCode) {
+            await html5QrCode.stop();
+            html5QrCode.clear();
+            html5QrCode = null;
         }
         statusElem.textContent = "Tap 'Start Scanner' to scan next item.";
-      } catch (err) {
+    } catch (err) {
         console.error("Stop error:", err);
-      }
-    });
+    }
+});
 
-    if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("service-worker.js")
+// Add a manual permission reset button
+const resetPermissionBtn = document.createElement("button");
+resetPermissionBtn.textContent = "🔄 Reset Camera Permission";
+resetPermissionBtn.style.marginTop = "10px";
+resetPermissionBtn.style.background = "#ff9800";
+resetPermissionBtn.addEventListener("click", async () => {
+    try {
+        // Try to get user media and immediately stop it to reset permission state
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        stream.getTracks().forEach(track => track.stop());
+        showNotification("✅ Camera permission reset. Please refresh the page.");
+    } catch (error) {
+        showNotification("❌ Could not reset camera permission.", true);
+    }
+});
+document.getElementById("settings").appendChild(resetPermissionBtn);
+
+if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("service-worker.js")
         .then((reg) => console.log("Service Worker Registered", reg))
         .catch(() => console.warn("Service worker registration failed"));
-    }
+}
 
-    window.addEventListener("beforeinstallprompt", (e) => {
-      e.preventDefault();
-      const installBtn = document.createElement("button");
-      installBtn.textContent = "📲 Install App";
-      Object.assign(installBtn.style, {
+window.addEventListener("beforeinstallprompt", (e) => {
+    e.preventDefault();
+    const installBtn = document.createElement("button");
+    installBtn.textContent = "📲 Install App";
+    Object.assign(installBtn.style, {
         position:"fixed",
         bottom:"80px",
         left:"50%",
@@ -787,18 +455,15 @@
         fontSize:"16px",
         cursor:"pointer",
         zIndex:"9999"
-      });
-      document.body.appendChild(installBtn);
-      installBtn.addEventListener("click", async () => {
+    });
+    document.body.appendChild(installBtn);
+    installBtn.addEventListener("click", async () => {
         installBtn.remove();
         e.prompt();
         const choice = await e.userChoice;
         if (choice.outcome === "accepted") showNotification("✅ App installed!");
         else showNotification("ℹ️ Installation cancelled");
-      });
     });
+});
 
-    updateScanDisplay();
-  </script>
-</body>
-</html>
+updateScanDisplay();
