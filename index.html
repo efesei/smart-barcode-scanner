@@ -299,6 +299,35 @@
       color: #004085;
       text-align: left;
     }
+
+    .permission-help {
+      background: #ffe7e7;
+      border: 1px solid #e74c3c;
+      border-radius: 6px;
+      padding: 10px;
+      margin-top: 10px;
+      font-size: 12px;
+      color: #721c24;
+      display: none;
+    }
+
+    .permission-help.show {
+      display: block;
+    }
+
+    .permission-help strong {
+      display: block;
+      margin-bottom: 5px;
+    }
+
+    .permission-help ol {
+      margin: 5px 0;
+      padding-left: 20px;
+    }
+
+    .permission-help li {
+      margin: 3px 0;
+    }
   </style>
 </head>
 <body>
@@ -324,6 +353,16 @@
         <strong>🚀 Powered by html5-qrcode</strong><br>
         Advanced scanning library with superior dense QR code detection
       </div>
+
+      <div class="permission-help" id="permissionHelp">
+        <strong>📷 Camera Access Denied?</strong>
+        <ol>
+          <li>Look for the <strong>camera/lock icon</strong> in your browser's address bar</li>
+          <li>Tap/click it and change Camera to <strong>"Allow"</strong></li>
+          <li>Refresh this page or tap "Start Scanner" again</li>
+        </ol>
+        <p style="margin: 5px 0 0 0;"><strong>iPhone/iPad:</strong> Go to Settings → Safari/Chrome → Enable Camera</p>
+      </div>
       
       <div class="scan-tips">
         <strong>📋 Scanning Tips for Dense QR Codes:</strong>
@@ -333,6 +372,15 @@
           <li><strong>Steadiness:</strong> Keep very steady for 2-3 seconds</li>
           <li><strong>Position:</strong> Hold phone flat and parallel to the QR code (not tilted)</li>
           <li><strong>Fill Frame:</strong> QR code should fill most of the camera view</li>
+        </ul>
+        <strong>⚙️ Camera Access Issues?</strong>
+        <ul>
+          <li><strong>Browser Settings Control Camera:</strong> This is a web app - camera permissions are managed by your browser, not the app</li>
+          <li><strong>Check Address Bar:</strong> Look for camera/lock icon and ensure camera is set to "Allow"</li>
+          <li><strong>Try Refreshing:</strong> After changing settings, refresh the page completely</li>
+          <li><strong>Try Different Browser:</strong> If issues persist, try Chrome, Firefox, or Safari</li>
+          <li><strong>HTTPS Required:</strong> Make sure the page URL starts with "https://" (secure connection)</li>
+          <li><strong>Restart Browser:</strong> Close and reopen your browser app completely</li>
         </ul>
       </div>
     </div>
@@ -373,6 +421,7 @@
     const scanDataElem = document.getElementById("scanData");
     const clearScanBtn = document.getElementById("clearScanBtn");
     const currentYearElem = document.getElementById("currentYear");
+    const permissionHelp = document.getElementById("permissionHelp");
 
     currentYearElem.textContent = new Date().getFullYear();
 
@@ -619,6 +668,20 @@
       try {
         html5QrCode = new Html5Qrcode("reader");
         
+        // First, try to get list of cameras (this also requests permission)
+        let cameras;
+        try {
+          cameras = await Html5Qrcode.getCameras();
+          console.log("Available cameras:", cameras);
+          
+          if (!cameras || cameras.length === 0) {
+            throw new Error("No cameras found on device");
+          }
+        } catch (cameraError) {
+          console.error("Camera enumeration error:", cameraError);
+          throw new Error("Cannot access camera. Please check browser permissions in Android Settings → Apps → Browser → Permissions → Camera");
+        }
+        
         // OPTIMIZED configuration for dense QR codes
         const config = {
           fps: 30,  // Frames per second - balanced for performance
@@ -641,21 +704,30 @@
           }
         };
 
-        // Request high-resolution camera for dense QR codes
-        const cameraConfig = { 
-          facingMode: "environment",
-          advanced: [{
-            width: { ideal: 1920 },
-            height: { ideal: 1080 }
-          }]
-        };
+        // Try using specific camera ID (environment/back camera preferred)
+        let cameraId = { facingMode: "environment" };
+        
+        // If we got camera list, use the back camera
+        if (cameras && cameras.length > 0) {
+          // Try to find back/environment camera
+          const backCamera = cameras.find(cam => 
+            cam.label && (cam.label.toLowerCase().includes('back') || 
+                         cam.label.toLowerCase().includes('environment') ||
+                         cam.label.toLowerCase().includes('rear'))
+          );
+          cameraId = backCamera ? backCamera.id : cameras[0].id;
+          console.log("Using camera:", cameraId);
+        }
 
         await html5QrCode.start(
-          cameraConfig,
+          cameraId,
           config,
           onScanSuccess,
           onScanError
         );
+        
+        // Hide permission help once camera starts successfully
+        permissionHelp.classList.remove("show");
         
         statusElem.textContent = "📷 Camera ready. Point at QR code or barcode...";
 
@@ -663,6 +735,10 @@
         console.error("Camera error:", err);
         statusElem.textContent = "❌ Camera access denied or unavailable.";
         showNotification("⚠️ Please allow camera access!", true);
+        
+        // Show permission help
+        permissionHelp.classList.add("show");
+        
         scanning = false;
         startBtn.style.display = "inline-block";
         stopBtn.style.display = "none";
