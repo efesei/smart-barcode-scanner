@@ -697,9 +697,12 @@
         videoStream = await navigator.mediaDevices.getUserMedia({ 
           video: { 
             facingMode: "environment",
-            width: { ideal: 1920 },
-            height: { ideal: 1080 },
-            focusMode: "continuous"
+            width: { ideal: 4096, max: 4096 },
+            height: { ideal: 2160, max: 2160 },
+            frameRate: { ideal: 60 },
+            focusMode: "continuous",
+            exposureMode: "continuous",
+            whiteBalanceMode: "continuous"
           } 
         });
         
@@ -717,6 +720,12 @@
 
         codeReader = new ZXing.BrowserMultiFormatReader();
         
+        // Enhanced ZXing hints for better QR code detection
+        codeReader.hints = new Map([
+          [ZXing.DecodeHintType.TRY_HARDER, true],
+          [ZXing.DecodeHintType.PURE_BARCODE, false]
+        ]);
+
         // Configure scanner for better performance with dense barcodes
         codeReader.decodeFromVideoDevice(undefined, 'video', async (result, err) => {
           if (result && scanning) {
@@ -767,6 +776,7 @@
               scannedDataOverlay.classList.remove("show");
               startBtn.style.display = "inline-block";
               stopBtn.style.display = "none";
+              refreshScannerBtn.style.display = "none";
               statusElem.textContent = "Tap 'Start Scanner' to scan next item.";
               stopAnimationMonitoring();
             }, 1500);
