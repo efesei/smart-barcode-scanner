@@ -764,16 +764,14 @@
       statusElem.textContent = "Requesting camera access...";
 
       try {
-        // OPTIMIZED camera settings for dense QR codes
+        // BALANCED camera settings for dense QR codes - optimized for compatibility
         videoStream = await navigator.mediaDevices.getUserMedia({ 
           video: { 
             facingMode: "environment",
-            width: { ideal: 3840, min: 1920 },  // 4K resolution for dense QR
-            height: { ideal: 2160, min: 1080 },
+            width: { ideal: 1920, min: 1280 },  // Full HD - best balance
+            height: { ideal: 1080, min: 720 },
             frameRate: { ideal: 30, min: 15 },  // Stable frame rate
-            aspectRatio: { ideal: 16/9 },
-            focusMode: "continuous",
-            focusDistance: { ideal: 0.3 }  // Optimized focus distance
+            aspectRatio: { ideal: 16/9 }
           } 
         });
         
@@ -787,16 +785,16 @@
         statusElem.textContent = "Camera ready. Allow camera to focus on QR code...";
 
         // Wait for camera to stabilize and focus
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await new Promise(resolve => setTimeout(resolve, 800));
         
-        focusIndicator.textContent = "✓ Focused - Ready to Scan";
+        focusIndicator.textContent = "✓ Ready to Scan";
         focusIndicator.classList.add("focused");
         
         setTimeout(() => {
           focusIndicator.textContent = "🔍 Scanning...";
           focusIndicator.classList.remove("focused");
           focusIndicator.classList.add("scanning");
-        }, 500);
+        }, 400);
 
         startAnimationMonitoring();
 
@@ -826,9 +824,9 @@
           [ZXing.DecodeHintType.CHARACTER_SET, 'UTF-8']
         ]);
 
-        // Optimized timing for dense QR codes - slower but more accurate
-        codeReader.timeBetweenDecodingAttempts = 300;  // Increased for better accuracy
-        codeReader.timeBetweenScansMillis = 150;  // More processing time
+        // Optimized timing for dense QR codes - balanced speed and accuracy
+        codeReader.timeBetweenDecodingAttempts = 200;  // Balanced for accuracy
+        codeReader.timeBetweenScansMillis = 100;  // Adequate processing time
 
         codeReader.decodeFromVideoDevice(undefined, 'video', async (result, err) => {
           if (result && scanning) {
