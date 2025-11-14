@@ -1,82 +1,101 @@
 # Deft Barcode Scanner
 
-![Version](https://img.shields.io/badge/Version-1.1-blue.svg)
-![PWA Ready](https://img.shields.io/badge/PWA-Ready-green.svg)
-![Browser Support](https://img.shields.io/badge/Browser-Chrome%20%7C%20Safari%20%7C%20Firefox%20%7C%20Edge-orange.svg)
+A powerful **Progressive Web App (PWA)** for real-time barcode and QR code scanning with advanced webhook integration. Built with modern web technologies and optimized for mobile devices.
 
-A powerful web-based barcode and QR code scanning application that supports real-time detection with webhook integration.
+![PWA Ready](https://img.shields.io/badge/PWA-Ready-blue)
+![Browser Support](https://img.shields.io/badge/Browser-Chrome%20%7C%20Firefox%20%7C%20Safari%20%7C%20Edge-green)
+
+---
 
 ## Overview
 
-Deft Barcode Scanner is a responsive web application that enables real-time barcode and QR code scanning directly from your browser. Built with modern web technologies, it provides a seamless scanning experience across all devices with camera capabilities.
+**Deft Barcode Scanner** is a responsive web application for real-time barcode and QR code scanning directly in the browser. Powered by the **html5-qrcode** library, it delivers fast dense-QR detection, smooth performance, and reliable scanning across devices with camera support.
+
+---
 
 ## Features
 
-- 📱 **Real-time Scanning** - Instant detection without manual capture
-- 🔗 **Webhook Integration** - Automatic data transmission to endpoints
-- 📚 **Webhook History** - Save and reuse previous webhook URLs
-- 🔄 **Auto-Recovery** - Self-healing scanner with manual refresh
-- 📲 **PWA Support** - Install as native app on mobile devices
-- 🎯 **Multi-Format Support** - Comprehensive barcode and QR code compatibility
-- 💾 **Local Storage** - Settings persist across sessions
-- 📱 **Mobile Optimized** - Responsive design for all screen sizes
+- 📱 **Real-time Scanning** – Instant detection with optimized performance  
+- 🔗 **Webhook Integration** – Auto-send scanned data to your endpoint  
+- 📚 **Webhook History** – Save & reuse up to 10 URLs  
+- 🎯 **Multi-Format Support** – 1D + 2D barcode formats  
+- 📲 **PWA Support** – Install as a mobile app  
+- 💾 **Local Storage** – Persistent settings  
+- 📱 **Mobile Optimized** – Fully responsive  
+- 🔊 **Audio Feedback** – Beep on successful scans  
+- 🌐 **Online/Offline Status** – Live connectivity monitoring  
+- ⚙️ **Camera Optimization** – Prefers back/environment camera  
+
+---
 
 ## Supported Formats
 
 ### 2D Codes
-- QR Codes
-- Data Matrix
-- PDF417
+- QR Code  
+- Data Matrix  
+- Aztec  
+- PDF417  
 
 ### 1D Linear Barcodes
-- UPC-A/E
-- EAN-8/13
-- Code 128
-- Code 39
+- UPC-A/E  
+- EAN-8/13  
+- Code 128  
+- Code 39  
+
+---
 
 ## Quick Start
 
-### Basic Usage
+### Configure Settings (Optional)
+1. Open **Settings**  
+2. Enter your **Webhook URL**  
+3. Click **💾 Save Settings**
 
-1. **Configure Settings (Optional)**
-   - Open the Settings section
-   - Enter your webhook URL (optional)
-   - Click "Save Settings"
+### Start Scanning
+1. Tap **📷 Start Scanner**  
+2. Point the camera at the barcode/QR code  
+3. View results under **Current Scan**
 
-2. **Start Scanning**
-   - Click "Start Scanner" to activate camera
-   - Point camera at barcode/QR code
-   - Scanner automatically detects and captures data
-   - View results in the Current Scan section
+### Webhook History
+- Click the webhook input to view past URLs  
+- Select from up to **10 saved entries**
 
-3. **Webhook History**
-   - Click the webhook URL field to see recent entries
-   - Select from previously used URLs
-   - History automatically saves on settings save
+---
 
-### Optimal Scanning Conditions
+## Optimal Scanning Tips
 
-- **Lighting:** Well-lit environment, avoid direct glare
-- **Distance:** 4-12 inches from code
-- **Angle:** Direct facing, avoid extreme angles
-- **Stability:** Keep device steady during scanning
+**For Dense QR Codes**
+- Distance: 6–10 inches  
+- Lighting: Bright, even lighting  
+- Steady: Hold still 2–3 seconds  
+- Angle: Keep device flat and parallel  
+- Fill Frame: QR code should fill most of the camera view  
+
+**General**
+- Well-lit environment  
+- 4–12 inches from code  
+- Avoid extreme angles  
+- Keep device steady  
+
+---
 
 ## Camera Requirements
 
-### Minimum Specifications
-- **Resolution:** 720p (1280×720)
-- **Focus:** Auto-focus capability
-- **Browser:** Modern browser with camera support
+**Minimum**
+- 720p resolution  
+- Auto-focus  
+- Modern browser  
 
-### Recommended Specifications
-- **Resolution:** 1080p (1920×1080) or higher
-- **Focus:** Continuous auto-focus
-- **Features:** Optical image stabilization, good low-light performance
+**Recommended**
+- 1080p or higher  
+- Continuous auto-focus  
+- Optical image stabilization  
+
+---
 
 ## Webhook Configuration
 
 ### Data Format
-
 ```json
 {
   "barcode_data": "scanned_data_here",
@@ -84,102 +103,85 @@ Deft Barcode Scanner is a responsive web application that enables real-time barc
   "scanned_at": "2025-01-01T12:00:00.000Z",
   "code_type": "QR_CODE"
 }
-```
 
-### HTTP Request
-- **Method:** POST
-- **Content-Type:** application/json
-- **Endpoint:** Your configured webhook URL
+HTTP Request
+Method: POST
+Content-Type: application/json
+Endpoint: Your configured webhook URL
 
-### Webhook History
-- Automatically saves up to 10 recent webhooks
-- Access by clicking the webhook URL input field
-- Maintains full backward compatibility
+Webhook History
+Auto-saves up to 10 recent URLs
+Accessible by clicking the input field
 
-## Performance
+Performance
+Metric	Value
+Scan Speed	1–3 seconds
+Success Rate	90%+ (ideal conditions)
+Camera Startup	1–2 seconds
+History Limit	10 URLs
+Supported Formats	10+ barcode types
 
-| Metric | Value |
-|--------|-------|
-| Scan Speed | 1-3 seconds (typical) |
-| Success Rate | 90%+ (optimal conditions) |
-| Reset Time | 1.5 seconds |
-| History Limit | 10 webhooks |
+Technical Details
+Browser Support
+Chrome 60+
+Safari 11+
+Firefox 55+
+Edge 79+
 
-## Troubleshooting
+Dependencies
+html5-qrcode
+Native Web APIs (camera, localStorage, AudioContext)
+PWA (service worker, manifest)
 
-### Common Issues
+Storage
+Webhook URLs: localStorage
+Webhook History: localStorage (10 entries)
+Scan Data: session only
+Settings: persistent
 
-**Scanner won't start**
-- Check camera permissions in browser settings
-- Ensure no other app is using the camera
+Troubleshooting
+Camera Access Denied
+Check browser permissions
+Refresh the page
 
-**Poor detection quality**
-- Improve lighting conditions
-- Clean camera lens
-- Hold device steady
-- Move closer to smaller codes
+Scanner Won’t Start
+Ensure no other app is using camera
+Try another browser
 
-**Animation stuck**
-- Use the "Fix Scanner" button
-- Refresh the page if necessary
+Delay Before Camera Opens
+App includes 1-second initial scan protection (normal behavior)
 
-**No sound on scan**
-- Check device volume settings
-- Ensure device is not in silent mode
+No Sound
+Check volume / silent mode
+Some browsers require user interaction first
 
-**Webhook not sending**
-- Verify internet connectivity
-- Check webhook URL format
-- Ensure CORS policies allow requests
+Webhook Not Sending
+Check internet connection
+Validate URL & CORS
+Ensure endpoint accepts POST JSON
 
-### For Dense Barcodes
-- Use higher resolution cameras
-- Ensure excellent lighting conditions
-- Get closer to the barcode
-- Use continuous focus mode
+Technical Architecture
+Library Info
+Powered by html5-qrcode
+Optional BarcodeDetector API support
+30 FPS scanning, optimized for QR codes
 
-## Technical Details
-
-### Browser Support
-- Chrome 60+
-- Safari 11+
-- Firefox 55+
-- Edge 79+
-
-### Storage
-- **Webhook URLs:** localStorage (persists until cache cleared)
-- **Scan Data:** Current session only
-- **Settings:** Persistent across browser sessions
-
-### Dependencies
-- **ZXing Library** - Barcode decoding
-- **Native Web APIs** - Camera access, localStorage
-
-## Development
-
-### Project Structure
-
-```
+Project Structure
+pgsql
+Copy code
 deft-barcode-scanner/
-├── index.html          # Main application file
-├── manifest.json       # PWA manifest
-└── service-worker.js   # Service worker (if implemented)
-```
+├── index.html
+├── manifest.json
+└── service-worker.js
 
-### Local Development
+Key Features
+1-second scan protection
+Automatic back-camera selection
+Robust permission/error handling
+Optimized for dense QR codes
 
-1. Serve the HTML file using any web server
-2. Access via HTTPS for camera permissions
-3. Test with various barcode types
+License
+© 2025 Deftmind Technology and Media Ventures
 
-## License
-
-Copyright © 2025 Deftmind Technology and Media Ventures
-
-## Support
-
-For technical support, feature requests, or bug reports, please contact Deftmind Technology and Media Ventures.
-
----
-
-**Note:** This application works best in well-lit conditions with clear, undamaged barcodes. Performance may vary based on camera quality and environmental factors.
+Support
+For support, feature requests, or bug reports, contact Deftmind Technology and Media Ventures.
