@@ -17,28 +17,28 @@
       flex-direction: column;
       min-height: 100vh;
     }
-  
+   
     .main-content {
       flex: 1;
     }
-  
+   
     .app-header {
       margin-bottom: 1rem;
     }
-  
+   
     .app-title {
       font-size: 1.5rem;
       font-weight: bold;
       color: #0066cc;
       margin: 0;
     }
-  
+   
     .app-author {
       font-size: 0.8rem;
       color: #666;
       margin: 0;
     }
-  
+   
     .scanner-container {
       position: relative;
       width: 100%;
@@ -49,7 +49,7 @@
       background: #000;
       box-shadow: 0 4px 12px rgba(0,0,0,0.3);
     }
-  
+   
     #reader {
       width: 100%;
       border-radius: 10px;
@@ -61,7 +61,7 @@
     #reader video {
       border-radius: 10px;
     }
-  
+   
     button {
       margin-top: 1rem;
       padding: 10px 20px;
@@ -79,7 +79,7 @@
     button.stop {
       background: #e74c3c;
     }
-  
+   
     #settings {
       margin-top: 1.5rem;
       text-align: left;
@@ -90,7 +90,7 @@
       border-radius: 8px;
       box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     }
-  
+   
     #currentScan {
       margin-top: 1.5rem;
       text-align: left;
@@ -101,14 +101,14 @@
       border-radius: 8px;
       box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     }
-  
+   
     .scan-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
       margin-bottom: 10px;
     }
-  
+   
     .clear-scan-btn {
       background: #e74c3c !important;
       color: white !important;
@@ -117,7 +117,7 @@
       border-radius: 4px !important;
       margin-top: 0 !important;
     }
-  
+   
     .scan-data {
       background: #f8f9fa;
       border: 1px solid #e9ecef;
@@ -132,18 +132,18 @@
       overflow-y: auto;
       margin-top: 10px;
     }
-  
+   
     .scan-data.empty {
       color: #6c757d;
       font-style: italic;
       text-align: center;
     }
-  
+   
     .webhook-input-container {
       position: relative;
       margin-bottom: 10px;
     }
-  
+   
     input[type="text"] {
       width: 100%;
       padding: 8px;
@@ -152,7 +152,7 @@
       font-size: 14px;
       box-sizing: border-box;
     }
-  
+   
     .webhook-history {
       position: absolute;
       top: 100%;
@@ -168,11 +168,11 @@
       display: none;
       box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     }
-  
+   
     .webhook-history.show {
       display: block;
     }
-  
+   
     .webhook-history-item {
       padding: 8px 12px;
       cursor: pointer;
@@ -180,32 +180,32 @@
       text-align: left;
       font-size: 14px;
     }
-  
+   
     .webhook-history-item:hover {
       background: #f5f5f5;
     }
-  
+   
     .webhook-history-item:last-child {
       border-bottom: none;
     }
-  
+   
     .history-hint {
       font-size: 12px;
       color: #666;
       margin-top: 5px;
     }
-  
+   
     label {
       display: block;
       margin-bottom: 5px;
       font-weight: bold;
       color: #333;
     }
-  
+   
     .settings-group {
       margin-bottom: 1rem;
     }
-  
+   
     .status-indicator {
       display: inline-block;
       width: 10px;
@@ -219,7 +219,7 @@
     .status-indicator.offline {
       background: #d63031;
     }
-  
+   
     .notification {
       position: fixed;
       top: 20px;
@@ -238,7 +238,7 @@
     .notification.error {
       background: #e74c3c;
     }
-  
+   
     @keyframes slideDown {
       from {
         opacity: 0;
@@ -249,7 +249,7 @@
         transform: translateX(-50%) translateY(0);
       }
     }
-  
+   
     .copyright-footer {
       margin-top: 2rem;
       padding: 1rem;
@@ -257,12 +257,12 @@
       font-size: 0.8rem;
       border-top: 1px solid #ddd;
     }
-  
+   
     .copyright-footer a {
       color: #0066cc;
       text-decoration: none;
     }
-  
+   
     .copyright-footer a:hover {
       text-decoration: underline;
     }
@@ -325,7 +325,7 @@
       <h1 class="app-title">Deft Barcode Scanner</h1>
       <p class="app-author">by Deftmind Technology and Media Ventures</p>
     </div>
-  
+   
     <div id="settings">
       <h3>⚙️ Settings</h3>
       <div class="settings-group">
@@ -337,7 +337,7 @@
         <div class="history-hint">Click to see previously used webhooks</div>
       </div>
       <button id="saveSettings">💾 Save Settings</button>
-    
+     
       <div class="library-info">
         <strong>🚀 Powered by html5-qrcode</strong><br>
         Advanced scanning library with superior dense QR code detection
@@ -355,7 +355,7 @@
         </ol>
         <p style="margin: 5px 0 0 0;"><strong>iPhone/iPad:</strong> Go to Settings → Safari/Chrome → Enable Camera</p>
       </div>
-    
+     
       <div class="scan-tips">
         <strong>📋 Scanning Tips for Dense QR Codes:</strong>
         <ul>
@@ -375,7 +375,7 @@
           <li><strong>Restart Browser:</strong> Close and reopen your browser app completely</li>
         </ul>
       </div>
-  
+   
     <p id="status">Configure webhook URL and tap "Start Scanner" to begin.<span class="status-indicator" id="onlineStatus"></span></p>
     <button id="startBtn">📷 Start Scanner</button>
     <button id="stopBtn" class="stop" style="display:none;">⏹️ Stop Scanner</button>
@@ -416,15 +416,15 @@
       if (webhookUrl) {
         webhookUrlInput.value = webhookUrl;
       }
-    
+     
       updateWebhookHistoryDisplay();
-    
+     
       webhookUrlInput.addEventListener('focus', () => {
         if (webhookHistory.length > 0) {
           webhookHistoryElem.classList.add('show');
         }
       });
-    
+     
       document.addEventListener('click', (e) => {
         if (!webhookUrlInput.contains(e.target) && !webhookHistoryElem.contains(e.target)) {
           webhookHistoryElem.classList.remove('show');
@@ -433,7 +433,7 @@
     }
     function updateWebhookHistoryDisplay() {
       webhookHistoryElem.innerHTML = '';
-    
+     
       if (webhookHistory.length === 0) {
         const emptyItem = document.createElement('div');
         emptyItem.className = 'webhook-history-item';
@@ -443,9 +443,9 @@
         webhookHistoryElem.appendChild(emptyItem);
         return;
       }
-    
+     
       const recentHistory = webhookHistory.slice(0, 5);
-    
+     
       recentHistory.forEach(url => {
         const item = document.createElement('div');
         item.className = 'webhook-history-item';
@@ -460,14 +460,14 @@
     }
     function addToWebhookHistory(url) {
       if (!url || url.trim() === '') return;
-    
+     
       webhookHistory = webhookHistory.filter(item => item !== url);
       webhookHistory.unshift(url);
-    
+     
       if (webhookHistory.length > 10) {
         webhookHistory = webhookHistory.slice(0, 10);
       }
-    
+     
       localStorage.setItem("webhookHistory", JSON.stringify(webhookHistory));
       updateWebhookHistoryDisplay();
     }
@@ -476,16 +476,16 @@
       try {
         const oscillator = audioContext.createOscillator();
         const gainNode = audioContext.createGain();
-      
+       
         oscillator.connect(gainNode);
         gainNode.connect(audioContext.destination);
-      
+       
         oscillator.frequency.value = 2000;
         oscillator.type = 'square';
-      
+       
         gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
         gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
-      
+       
         oscillator.start(audioContext.currentTime);
         oscillator.stop(audioContext.currentTime + 0.1);
       } catch (e) {
@@ -521,16 +521,16 @@
       const newUrl = webhookUrlInput.value.trim();
       webhookUrl = newUrl;
       localStorage.setItem("webhookUrl", newUrl);
-    
+     
       addToWebhookHistory(newUrl);
-    
+     
       showNotification("✅ Settings saved!", false);
       console.log("Webhook URL saved:", newUrl);
     });
     clearScanBtn.addEventListener("click", clearScanData);
     async function sendScanData(scanData) {
       if (!navigator.onLine || !webhookUrl) return;
-    
+     
       try {
         const payload = {
           barcode_data: scanData.barcode_data,
@@ -544,9 +544,9 @@
           headers: {"Content-Type": "application/json"},
           body: JSON.stringify(payload)
         });
-      
+       
         console.log("Webhook response:", res.status, res.statusText);
-      
+       
         if (res.ok) {
           showNotification("✅ Data sent to webhook!");
         } else {
@@ -573,34 +573,34 @@
     // Success callback for scanning
     async function onScanSuccess(decodedText, decodedResult) {
       if (!scanning) return;
-    
+     
       console.log("Scan successful:", decodedText);
       console.log("Format:", decodedResult.result.format);
-    
+     
       // Stop scanning immediately
       scanning = false;
       stopBtn.click();
-    
+     
       playBeep();
-    
+     
       const data = {
         barcode_data: decodedText,
         timestamp: new Date().toISOString(),
         code_type: decodedResult.result.format?.formatName || "QR_CODE",
         sent: false
       };
-    
+     
       statusElem.textContent = `✅ Scan Complete! Type: ${data.code_type}`;
-    
+     
       showNotification(`✅ ${data.code_type} Scanned!`);
-    
+     
       currentScanData = decodedText;
       updateScanDisplay();
-    
+     
       if (navigator.onLine && webhookUrl) {
         await sendScanData(data);
       }
-    
+     
       setTimeout(() => {
         statusElem.textContent = "Tap 'Start Scanner' to scan next item.";
       }, 2000);
@@ -615,26 +615,26 @@
     }
     startBtn.addEventListener("click", async () => {
       if (scanning) return;
-    
+     
       if (!webhookUrl) {
         showNotification("⚠️ Please configure webhook URL first!", true);
         return;
       }
       clearScanData();
-    
+     
       scanning = true;
       startBtn.style.display = "none";
       stopBtn.style.display = "inline-block";
       statusElem.textContent = "Starting scanner...";
       try {
         html5QrCode = new Html5Qrcode("reader");
-      
+       
         // First, try to get list of cameras (this also requests permission)
         let cameras;
         try {
           cameras = await Html5Qrcode.getCameras();
           console.log("Available cameras:", cameras);
-        
+         
           if (!cameras || cameras.length === 0) {
             throw new Error("No cameras found on device");
           }
@@ -642,7 +642,7 @@
           console.error("Camera enumeration error:", cameraError);
           throw new Error("Cannot access camera. Please check browser permissions in Android Settings → Apps → Browser → Permissions → Camera");
         }
-      
+       
         // OPTIMIZED configuration for dense QR codes
         const config = {
           fps: 30, // Frames per second - balanced for performance
@@ -666,7 +666,7 @@
         };
         // Try using specific camera ID (environment/back camera preferred)
         let cameraId = { facingMode: "environment" };
-      
+       
         // If we got camera list, use the back camera
         if (cameras && cameras.length > 0) {
           // Try to find back/environment camera
@@ -684,30 +684,75 @@
           onScanSuccess,
           onScanError
         );
-      
-        // Pause scanning until the video feed is visibly ready
-        html5QrCode.pause();
-      
-        const videoElem = document.querySelector('#reader video');
-        if (videoElem) {
-          statusElem.textContent = "📷 Loading camera feed...";
-          videoElem.addEventListener('loadeddata', () => {
-            statusElem.textContent = "📷 Camera ready. Point at QR code or barcode...";
-            html5QrCode.resume();
-          }, {once: true});
-        } else {
-          // Fallback if no video element (unlikely)
-          statusElem.textContent = "📷 Camera ready. Point at QR code or barcode...";
-          html5QrCode.resume();
-        }
-      
+       
         // Hide permission help once camera starts successfully
         permissionHelp.classList.remove("show");
-      
+       
+        statusElem.textContent = "📷 Camera ready. Point at QR code or barcode...";
       } catch (err) {
         console.error("Camera error:", err);
         statusElem.textContent = "❌ Camera access denied or unavailable.";
         showNotification("⚠️ Please allow camera access!", true);
-      
+       
         // Show permission help
-        permissionHelp.classList.add("show
+        permissionHelp.classList.add("show");
+       
+        scanning = false;
+        startBtn.style.display = "inline-block";
+        stopBtn.style.display = "none";
+      }
+    });
+    stopBtn.addEventListener("click", async () => {
+      if (!scanning && !html5QrCode) return;
+     
+      scanning = false;
+      startBtn.style.display = "inline-block";
+      stopBtn.style.display = "none";
+     
+      try {
+        if (html5QrCode) {
+          await html5QrCode.stop();
+          html5QrCode.clear();
+          html5QrCode = null;
+        }
+        statusElem.textContent = "Tap 'Start Scanner' to scan next item.";
+      } catch (err) {
+        console.error("Stop error:", err);
+      }
+    });
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("service-worker.js")
+        .then((reg) => console.log("Service Worker Registered", reg))
+        .catch(() => console.warn("Service worker registration failed"));
+    }
+    window.addEventListener("beforeinstallprompt", (e) => {
+      e.preventDefault();
+      const installBtn = document.createElement("button");
+      installBtn.textContent = "📲 Install App";
+      Object.assign(installBtn.style, {
+        position:"fixed",
+        bottom:"80px",
+        left:"50%",
+        transform:"translateX(-50%)",
+        background:"#00b894",
+        color:"#fff",
+        border:"none",
+        borderRadius:"6px",
+        padding:"10px 20px",
+        fontSize:"16px",
+        cursor:"pointer",
+        zIndex:"9999"
+      });
+      document.body.appendChild(installBtn);
+      installBtn.addEventListener("click", async () => {
+        installBtn.remove();
+        e.prompt();
+        const choice = await e.userChoice;
+        if (choice.outcome === "accepted") showNotification("✅ App installed!");
+        else showNotification("ℹ️ Installation cancelled");
+      });
+    });
+    updateScanDisplay();
+  </script>
+</body>
+</html>
