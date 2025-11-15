@@ -6,6 +6,7 @@
   <title>Deft Barcode Scanner</title>
   <link rel="manifest" href="manifest.json" />
   <meta name="theme-color" content="#0066cc" />
+  <link rel="apple-touch-icon" href="icon-192.png" />
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -54,7 +55,6 @@
       width: 100%;
       border-radius: 10px;
     }
-    /* Hide html5-qrcode's default button styling */
     #reader button {
       display: none !important;
     }
@@ -89,6 +89,138 @@
       padding: 1rem;
       border-radius: 8px;
       box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    
+    .mode-toggle {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 1rem;
+    }
+    
+    .mode-btn {
+      flex: 1;
+      padding: 12px;
+      border: 2px solid #0066cc;
+      background: white;
+      color: #0066cc;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: all 0.3s;
+      margin-top: 0;
+    }
+    
+    .mode-btn.active {
+      background: #0066cc;
+      color: white;
+    }
+    
+    .batch-container {
+      margin-top: 1.5rem;
+      text-align: left;
+      max-width: 600px;
+      margin-inline: auto;
+      background: white;
+      padding: 1rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      display: none;
+    }
+    
+    .batch-container.show {
+      display: block;
+    }
+    
+    .batch-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+    
+    .batch-counter {
+      background: #0066cc;
+      color: white;
+      padding: 5px 15px;
+      border-radius: 20px;
+      font-weight: bold;
+      font-size: 14px;
+    }
+    
+    .batch-items {
+      max-height: 300px;
+      overflow-y: auto;
+      margin-bottom: 15px;
+    }
+    
+    .batch-item {
+      background: #f8f9fa;
+      border: 1px solid #e9ecef;
+      border-radius: 6px;
+      padding: 12px;
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .batch-item-data {
+      flex: 1;
+      font-family: 'Courier New', monospace;
+      font-size: 13px;
+      word-break: break-all;
+      margin-right: 10px;
+    }
+    
+    .batch-item-time {
+      font-size: 11px;
+      color: #666;
+      margin-top: 5px;
+    }
+    
+    .batch-item-delete {
+      background: #e74c3c;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      padding: 6px 12px;
+      cursor: pointer;
+      font-size: 12px;
+      white-space: nowrap;
+      margin-top: 0;
+    }
+    
+    .batch-actions {
+      display: flex;
+      gap: 10px;
+    }
+    
+    .batch-actions button {
+      flex: 1;
+      margin-top: 0;
+    }
+    
+    .batch-empty {
+      text-align: center;
+      color: #999;
+      font-style: italic;
+      padding: 20px;
+    }
+    
+    .duplicate-indicator {
+      background: #ffc107;
+      color: #856404;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 13px;
+      margin-top: 10px;
+      display: none;
+      max-width: 600px;
+      margin-inline: auto;
+    }
+    
+    .duplicate-indicator.show {
+      display: block;
     }
    
     #currentScan {
@@ -144,7 +276,7 @@
       margin-bottom: 10px;
     }
    
-    input[type="text"] {
+    input[type="text"], select {
       width: 100%;
       padding: 8px;
       border: 1px solid #ddd;
@@ -328,6 +460,15 @@
    
     <div id="settings">
       <h3>⚙️ Settings</h3>
+      
+      <div class="settings-group">
+        <label>Scan Mode:</label>
+        <div class="mode-toggle">
+          <button class="mode-btn active" id="singleModeBtn">📷 Single Scan</button>
+          <button class="mode-btn" id="batchModeBtn">📦 Batch Scan</button>
+        </div>
+      </div>
+      
       <div class="settings-group">
         <label for="webhookUrl">Webhook URL:</label>
         <div class="webhook-input-container">
@@ -336,6 +477,15 @@
         </div>
         <div class="history-hint">Click to see previously used webhooks</div>
       </div>
+      
+      <div class="settings-group" id="batchSettings" style="display:none;">
+        <label for="sendMethod">Batch Send Method:</label>
+        <select id="sendMethod">
+          <option value="individual">Send Each Item Individually</option>
+          <option value="batch">Send All as Single Batch</option>
+        </select>
+      </div>
+      
       <button id="saveSettings">💾 Save Settings</button>
      
       <div class="library-info">
@@ -343,42 +493,60 @@
         Advanced scanning library with superior dense QR code detection
       </div>
     </div>
+    
     <div class="scanner-container">
       <div id="reader"></div>
     </div>
+    
     <div class="permission-help" id="permissionHelp">
-        <strong>📷 Camera Access Denied?</strong>
-        <ol>
-          <li>Look for the <strong>camera/lock icon</strong> in your browser's address bar</li>
-          <li>Tap/click it and change Camera to <strong>"Allow"</strong></li>
-          <li>Refresh this page or tap "Start Scanner" again</li>
-        </ol>
-        <p style="margin: 5px 0 0 0;"><strong>iPhone/iPad:</strong> Go to Settings → Safari/Chrome → Enable Camera</p>
-      </div>
+      <strong>📷 Camera Access Denied?</strong>
+      <ol>
+        <li>Look for the <strong>camera/lock icon</strong> in your browser's address bar</li>
+        <li>Tap/click it and change Camera to <strong>"Allow"</strong></li>
+        <li>Refresh this page or tap "Start Scanner" again</li>
+      </ol>
+      <p style="margin: 5px 0 0 0;"><strong>iPhone/iPad:</strong> Go to Settings → Safari/Chrome → Enable Camera</p>
+    </div>
      
-      <div class="scan-tips">
-        <strong>📋 Scanning Tips for Dense QR Codes:</strong>
-        <ul>
-          <li><strong>Distance:</strong> Hold 6-10 inches away for dense QR codes</li>
-          <li><strong>Lighting:</strong> Use bright, even lighting (avoid shadows)</li>
-          <li><strong>Steadiness:</strong> Keep very steady for 2-3 seconds</li>
-          <li><strong>Position:</strong> Hold phone flat and parallel to the QR code (not tilted)</li>
-          <li><strong>Fill Frame:</strong> QR code should fill most of the camera view</li>
-        </ul>
-        <strong>⚙️ Camera Access Issues?</strong>
-        <ul>
-          <li><strong>Browser Settings Control Camera:</strong> This is a web app - camera permissions are managed by your browser, not the app</li>
-          <li><strong>Check Address Bar:</strong> Look for camera/lock icon and ensure camera is set to "Allow"</li>
-          <li><strong>Try Refreshing:</strong> After changing settings, refresh the page completely</li>
-          <li><strong>Try Different Browser:</strong> If issues persist, try Chrome, Firefox, or Safari</li>
-          <li><strong>HTTPS Required:</strong> Make sure the page URL starts with "https://" (secure connection)</li>
-          <li><strong>Restart Browser:</strong> Close and reopen your browser app completely</li>
-        </ul>
-      </div>
+    <div class="scan-tips">
+      <strong>📋 Scanning Tips for Dense QR Codes:</strong>
+      <ul>
+        <li><strong>Distance:</strong> Hold 6-10 inches away for dense QR codes</li>
+        <li><strong>Lighting:</strong> Use bright, even lighting (avoid shadows)</li>
+        <li><strong>Steadiness:</strong> Keep very steady for 2-3 seconds</li>
+        <li><strong>Position:</strong> Hold phone flat and parallel to the QR code (not tilted)</li>
+        <li><strong>Fill Frame:</strong> QR code should fill most of the camera view</li>
+      </ul>
+      <strong>⚙️ Camera Access Issues?</strong>
+      <ul>
+        <li><strong>Browser Settings Control Camera:</strong> This is a web app - camera permissions are managed by your browser, not the app</li>
+        <li><strong>Check Address Bar:</strong> Look for camera/lock icon and ensure camera is set to "Allow"</li>
+        <li><strong>Try Refreshing:</strong> After changing settings, refresh the page completely</li>
+        <li><strong>Try Different Browser:</strong> If issues persist, try Chrome, Firefox, or Safari</li>
+        <li><strong>HTTPS Required:</strong> Make sure the page URL starts with "https://" (secure connection)</li>
+        <li><strong>Restart Browser:</strong> Close and reopen your browser app completely</li>
+      </ul>
+    </div>
    
     <p id="status">Configure webhook URL and tap "Start Scanner" to begin.<span class="status-indicator" id="onlineStatus"></span></p>
+    <div class="duplicate-indicator" id="duplicateIndicator">⚠️ Duplicate scan ignored (already in batch)</div>
     <button id="startBtn">📷 Start Scanner</button>
     <button id="stopBtn" class="stop" style="display:none;">⏹️ Stop Scanner</button>
+    
+    <div class="batch-container" id="batchContainer">
+      <div class="batch-header">
+        <h3>📦 Batch Items</h3>
+        <span class="batch-counter" id="batchCounter">0 items</span>
+      </div>
+      <div class="batch-items" id="batchItems">
+        <div class="batch-empty">No items scanned yet. Start scanning to add items.</div>
+      </div>
+      <div class="batch-actions">
+        <button id="completeBatchBtn" style="background: #00b894;">✅ Complete Batch</button>
+        <button id="clearBatchBtn" style="background: #e74c3c;">🗑️ Clear All</button>
+      </div>
+    </div>
+    
     <div id="currentScan">
       <div class="scan-header">
         <h3>📄 Current Scan</h3>
@@ -387,12 +555,14 @@
       <div class="scan-data empty" id="scanData">No data scanned yet.</div>
     </div>
   </div>
+  
   <div class="copyright-footer">
     Copyright © <span id="currentYear">2025</span>.
     <a href="https://deftmindai.com/welcome-to-deftmind-technology-and-media-ventures/" target="_blank">
       Deftmind Technology and Media Ventures
     </a>
   </div>
+  
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
   <script>
     const statusElem = document.getElementById("status");
@@ -406,34 +576,81 @@
     const clearScanBtn = document.getElementById("clearScanBtn");
     const currentYearElem = document.getElementById("currentYear");
     const permissionHelp = document.getElementById("permissionHelp");
+    const singleModeBtn = document.getElementById("singleModeBtn");
+    const batchModeBtn = document.getElementById("batchModeBtn");
+    const batchContainer = document.getElementById("batchContainer");
+    const batchSettings = document.getElementById("batchSettings");
+    const batchItemsElem = document.getElementById("batchItems");
+    const batchCounter = document.getElementById("batchCounter");
+    const completeBatchBtn = document.getElementById("completeBatchBtn");
+    const clearBatchBtn = document.getElementById("clearBatchBtn");
+    const sendMethodSelect = document.getElementById("sendMethod");
+    const duplicateIndicator = document.getElementById("duplicateIndicator");
+    
     currentYearElem.textContent = new Date().getFullYear();
+    
     let scanning = false;
+    let scanMode = localStorage.getItem("scanMode") || "single";
+    let sendMethod = localStorage.getItem("sendMethod") || "individual";
     let currentScanData = null;
     let webhookUrl = localStorage.getItem("webhookUrl") || "";
     let webhookHistory = JSON.parse(localStorage.getItem("webhookHistory") || "[]");
     let html5QrCode = null;
+    let batchItems = JSON.parse(localStorage.getItem("batchItems") || "[]");
+    let recentScans = new Map();
+    const DUPLICATE_COOLDOWN = 5000;
+    let scanReady = false;
+    
+    function initMode() {
+      if (scanMode === "batch") {
+        batchModeBtn.classList.add("active");
+        singleModeBtn.classList.remove("active");
+        batchContainer.classList.add("show");
+        batchSettings.style.display = "block";
+      } else {
+        singleModeBtn.classList.add("active");
+        batchModeBtn.classList.remove("active");
+        batchContainer.classList.remove("show");
+        batchSettings.style.display = "none";
+      }
+      sendMethodSelect.value = sendMethod;
+      updateBatchDisplay();
+    }
+    
+    singleModeBtn.addEventListener("click", () => {
+      scanMode = "single";
+      localStorage.setItem("scanMode", "single");
+      initMode();
+    });
+    
+    batchModeBtn.addEventListener("click", () => {
+      scanMode = "batch";
+      localStorage.setItem("scanMode", "batch");
+      initMode();
+    });
+    
     function initWebhookHistory() {
       if (webhookUrl) {
         webhookUrlInput.value = webhookUrl;
       }
-     
       updateWebhookHistoryDisplay();
-     
+      
       webhookUrlInput.addEventListener('focus', () => {
         if (webhookHistory.length > 0) {
           webhookHistoryElem.classList.add('show');
         }
       });
-     
+      
       document.addEventListener('click', (e) => {
         if (!webhookUrlInput.contains(e.target) && !webhookHistoryElem.contains(e.target)) {
           webhookHistoryElem.classList.remove('show');
         }
       });
     }
+    
     function updateWebhookHistoryDisplay() {
       webhookHistoryElem.innerHTML = '';
-     
+      
       if (webhookHistory.length === 0) {
         const emptyItem = document.createElement('div');
         emptyItem.className = 'webhook-history-item';
@@ -443,9 +660,9 @@
         webhookHistoryElem.appendChild(emptyItem);
         return;
       }
-     
+      
       const recentHistory = webhookHistory.slice(0, 5);
-     
+      
       recentHistory.forEach(url => {
         const item = document.createElement('div');
         item.className = 'webhook-history-item';
@@ -458,40 +675,172 @@
         webhookHistoryElem.appendChild(item);
       });
     }
+    
     function addToWebhookHistory(url) {
       if (!url || url.trim() === '') return;
-     
       webhookHistory = webhookHistory.filter(item => item !== url);
       webhookHistory.unshift(url);
-     
       if (webhookHistory.length > 10) {
         webhookHistory = webhookHistory.slice(0, 10);
       }
-     
       localStorage.setItem("webhookHistory", JSON.stringify(webhookHistory));
       updateWebhookHistoryDisplay();
     }
+    
     const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-    function playBeep() {
+    
+    function playBeep(isDuplicate = false) {
       try {
         const oscillator = audioContext.createOscillator();
         const gainNode = audioContext.createGain();
-       
         oscillator.connect(gainNode);
         gainNode.connect(audioContext.destination);
-       
-        oscillator.frequency.value = 2000;
-        oscillator.type = 'square';
-       
-        gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
-       
-        oscillator.start(audioContext.currentTime);
-        oscillator.stop(audioContext.currentTime + 0.1);
+        
+        if (isDuplicate) {
+          oscillator.frequency.value = 800;
+          oscillator.type = 'square';
+          gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
+          gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+          oscillator.start(audioContext.currentTime);
+          oscillator.stop(audioContext.currentTime + 0.1);
+          
+          setTimeout(() => {
+            const osc2 = audioContext.createOscillator();
+            const gain2 = audioContext.createGain();
+            osc2.connect(gain2);
+            gain2.connect(audioContext.destination);
+            osc2.frequency.value = 800;
+            osc2.type = 'square';
+            gain2.gain.setValueAtTime(0.2, audioContext.currentTime);
+            gain2.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+            osc2.start(audioContext.currentTime);
+            osc2.stop(audioContext.currentTime + 0.1);
+          }, 150);
+        } else {
+          oscillator.frequency.value = 2000;
+          oscillator.type = 'square';
+          gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+          gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+          oscillator.start(audioContext.currentTime);
+          oscillator.stop(audioContext.currentTime + 0.1);
+        }
       } catch (e) {
         console.log("Audio context error:", e);
       }
     }
+    
+    function isDuplicate(scanData) {
+      const now = Date.now();
+      for (let [key, timestamp] of recentScans.entries()) {
+        if (now - timestamp > DUPLICATE_COOLDOWN) {
+          recentScans.delete(key);
+        }
+      }
+      if (recentScans.has(scanData)) {
+        return true;
+      }
+      recentScans.set(scanData, now);
+      return false;
+    }
+    
+    function updateBatchDisplay() {
+      batchCounter.textContent = `${batchItems.length} item${batchItems.length !== 1 ? 's' : ''}`;
+      
+      if (batchItems.length === 0) {
+        batchItemsElem.innerHTML = '<div class="batch-empty">No items scanned yet. Start scanning to add items.</div>';
+        return;
+      }
+      
+      batchItemsElem.innerHTML = batchItems.map((item, index) => `
+        <div class="batch-item">
+          <div>
+            <div class="batch-item-data">${item.barcode_data}</div>
+            <div class="batch-item-time">${new Date(item.timestamp).toLocaleTimeString()} - ${item.code_type}</div>
+          </div>
+          <button class="batch-item-delete" onclick="deleteFromBatch(${index})">🗑️</button>
+        </div>
+      `).join('');
+    }
+    
+    window.deleteFromBatch = function(index) {
+      batchItems.splice(index, 1);
+      localStorage.setItem("batchItems", JSON.stringify(batchItems));
+      updateBatchDisplay();
+      showNotification("Item removed from batch");
+    }
+    
+    clearBatchBtn.addEventListener("click", () => {
+      if (batchItems.length === 0) return;
+      if (confirm(`Clear all ${batchItems.length} items from batch?`)) {
+        batchItems = [];
+        localStorage.setItem("batchItems", JSON.stringify(batchItems));
+        recentScans.clear();
+        updateBatchDisplay();
+        showNotification("Batch cleared");
+      }
+    });
+    
+    completeBatchBtn.addEventListener("click", async () => {
+      if (batchItems.length === 0) {
+        showNotification("⚠️ No items in batch!", true);
+        return;
+      }
+      if (!webhookUrl) {
+        showNotification("⚠️ Please configure webhook URL!", true);
+        return;
+      }
+      if (!navigator.onLine) {
+        showNotification("⚠️ You are offline!", true);
+        return;
+      }
+      
+      const itemCount = batchItems.length;
+      
+      try {
+        if (sendMethod === "batch") {
+          const payload = {
+            batch: batchItems,
+            batch_size: itemCount,
+            completed_at: new Date().toISOString()
+          };
+          const res = await fetch(webhookUrl, {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify(payload)
+          });
+          if (res.ok) {
+            showNotification(`✅ Batch of ${itemCount} items sent!`);
+          } else {
+            showNotification("⚠️ Webhook error: " + res.status, true);
+            return;
+          }
+        } else {
+          let successCount = 0;
+          for (const item of batchItems) {
+            try {
+              const res = await fetch(webhookUrl, {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify(item)
+              });
+              if (res.ok) successCount++;
+            } catch (err) {
+              console.error("Send error:", err);
+            }
+          }
+          showNotification(`✅ ${successCount}/${itemCount} items sent!`);
+        }
+        
+        batchItems = [];
+        localStorage.setItem("batchItems", JSON.stringify(batchItems));
+        recentScans.clear();
+        updateBatchDisplay();
+      } catch (err) {
+        console.error("Batch send error:", err);
+        showNotification("⚠️ Failed to send batch", true);
+      }
+    });
+    
     function updateScanDisplay() {
       if (currentScanData) {
         scanDataElem.textContent = currentScanData;
@@ -501,258 +850,6 @@
         scanDataElem.classList.add('empty');
       }
     }
+    
     function clearScanData() {
-      currentScanData = null;
-      updateScanDisplay();
-      showNotification("Scan data cleared");
-    }
-    if ("Notification" in window && Notification.permission === "default") {
-      Notification.requestPermission();
-    }
-    webhookUrlInput.value = webhookUrl;
-    initWebhookHistory();
-    function updateOnlineStatus() {
-      onlineStatus.className = "status-indicator " + (navigator.onLine ? "online" : "offline");
-    }
-    updateOnlineStatus();
-    window.addEventListener("online", updateOnlineStatus);
-    window.addEventListener("offline", updateOnlineStatus);
-    saveSettingsBtn.addEventListener("click", () => {
-      const newUrl = webhookUrlInput.value.trim();
-      webhookUrl = newUrl;
-      localStorage.setItem("webhookUrl", newUrl);
-     
-      addToWebhookHistory(newUrl);
-     
-      showNotification("✅ Settings saved!", false);
-      console.log("Webhook URL saved:", newUrl);
-    });
-    clearScanBtn.addEventListener("click", clearScanData);
-    async function sendScanData(scanData) {
-      if (!navigator.onLine || !webhookUrl) return;
-     
-      try {
-        const payload = {
-          barcode_data: scanData.barcode_data,
-          timestamp: scanData.timestamp,
-          scanned_at: scanData.timestamp,
-          code_type: scanData.code_type || "QR_CODE"
-        };
-        console.log("Sending to webhook:", JSON.stringify(payload, null, 2));
-        const res = await fetch(webhookUrl, {
-          method: "POST",
-          headers: {"Content-Type": "application/json"},
-          body: JSON.stringify(payload)
-        });
-       
-        console.log("Webhook response:", res.status, res.statusText);
-       
-        if (res.ok) {
-          showNotification("✅ Data sent to webhook!");
-        } else {
-          showNotification("⚠️ Webhook error: " + res.status, true);
-        }
-      } catch (err) {
-        console.error("Send error:", err);
-        showNotification("⚠️ Failed to send data", true);
-      }
-    }
-    function showNotification(message, isError = false) {
-      if ("Notification" in window && Notification.permission === "granted") {
-        new Notification("Deft Barcode Scanner", {
-          body: message,
-          icon: "https://cdn-icons-png.flaticon.com/512/864/864685.png"
-        });
-      }
-      const notif = document.createElement("div");
-      notif.className = "notification" + (isError ? " error" : "");
-      notif.textContent = message;
-      document.body.appendChild(notif);
-      setTimeout(() => notif.remove(), 3000);
-    }
-    // Success callback for scanning
-    async function onScanSuccess(decodedText, decodedResult) {
-      if (!scanning) return;
-     
-      console.log("Scan successful:", decodedText);
-      console.log("Format:", decodedResult.result.format);
-     
-      // Stop scanning immediately
-      scanning = false;
-      stopBtn.click();
-     
-      playBeep();
-     
-      const data = {
-        barcode_data: decodedText,
-        timestamp: new Date().toISOString(),
-        code_type: decodedResult.result.format?.formatName || "QR_CODE",
-        sent: false
-      };
-     
-      statusElem.textContent = `✅ Scan Complete! Type: ${data.code_type}`;
-     
-      showNotification(`✅ ${data.code_type} Scanned!`);
-     
-      currentScanData = decodedText;
-      updateScanDisplay();
-     
-      if (navigator.onLine && webhookUrl) {
-        await sendScanData(data);
-      }
-     
-      setTimeout(() => {
-        statusElem.textContent = "Tap 'Start Scanner' to scan next item.";
-      }, 2000);
-    }
-    // Error callback (optional, for debugging)
-    function onScanError(errorMessage) {
-      // Ignore common "not found" errors - they're expected during scanning
-      // Only log actual errors
-      if (!errorMessage.includes("NotFoundException")) {
-        console.warn("Scan error:", errorMessage);
-      }
-    }
-    startBtn.addEventListener("click", async () => {
-      if (scanning) return;
-     
-      if (!webhookUrl) {
-        showNotification("⚠️ Please configure webhook URL first!", true);
-        return;
-      }
-      clearScanData();
-     
-      scanning = true;
-      startBtn.style.display = "none";
-      stopBtn.style.display = "inline-block";
-      statusElem.textContent = "Starting scanner...";
-      try {
-        html5QrCode = new Html5Qrcode("reader");
-       
-        // First, try to get list of cameras (this also requests permission)
-        let cameras;
-        try {
-          cameras = await Html5Qrcode.getCameras();
-          console.log("Available cameras:", cameras);
-         
-          if (!cameras || cameras.length === 0) {
-            throw new Error("No cameras found on device");
-          }
-        } catch (cameraError) {
-          console.error("Camera enumeration error:", cameraError);
-          throw new Error("Cannot access camera. Please check browser permissions in Android Settings → Apps → Browser → Permissions → Camera");
-        }
-       
-        // OPTIMIZED configuration for dense QR codes
-        const config = {
-          fps: 30, // Frames per second - balanced for performance
-          qrbox: { width: 300, height: 300 }, // Scanning box size
-          aspectRatio: 1.0, // Square aspect for QR codes
-          formatsToSupport: [
-            Html5QrcodeSupportedFormats.QR_CODE,
-            Html5QrcodeSupportedFormats.DATA_MATRIX,
-            Html5QrcodeSupportedFormats.AZTEC,
-            Html5QrcodeSupportedFormats.PDF_417,
-            Html5QrcodeSupportedFormats.EAN_13,
-            Html5QrcodeSupportedFormats.EAN_8,
-            Html5QrcodeSupportedFormats.CODE_128,
-            Html5QrcodeSupportedFormats.CODE_39,
-            Html5QrcodeSupportedFormats.UPC_A,
-            Html5QrcodeSupportedFormats.UPC_E
-          ],
-          experimentalFeatures: {
-            useBarCodeDetectorIfSupported: true // Use native browser API if available
-          }
-        };
-        // Try using specific camera ID (environment/back camera preferred)
-        let cameraId = { facingMode: "environment" };
-       
-        // If we got camera list, use the back camera
-        if (cameras && cameras.length > 0) {
-          // Try to find back/environment camera
-          const backCamera = cameras.find(cam =>
-            cam.label && (cam.label.toLowerCase().includes('back') ||
-                         cam.label.toLowerCase().includes('environment') ||
-                         cam.label.toLowerCase().includes('rear'))
-          );
-          cameraId = backCamera ? backCamera.id : cameras[0].id;
-          console.log("Using camera:", cameraId);
-        }
-        await html5QrCode.start(
-          cameraId,
-          config,
-          onScanSuccess,
-          onScanError
-        );
-       
-        // Hide permission help once camera starts successfully
-        permissionHelp.classList.remove("show");
-       
-        statusElem.textContent = "📷 Camera ready. Point at QR code or barcode...";
-      } catch (err) {
-        console.error("Camera error:", err);
-        statusElem.textContent = "❌ Camera access denied or unavailable.";
-        showNotification("⚠️ Please allow camera access!", true);
-       
-        // Show permission help
-        permissionHelp.classList.add("show");
-       
-        scanning = false;
-        startBtn.style.display = "inline-block";
-        stopBtn.style.display = "none";
-      }
-    });
-    stopBtn.addEventListener("click", async () => {
-      if (!scanning && !html5QrCode) return;
-     
-      scanning = false;
-      startBtn.style.display = "inline-block";
-      stopBtn.style.display = "none";
-     
-      try {
-        if (html5QrCode) {
-          await html5QrCode.stop();
-          html5QrCode.clear();
-          html5QrCode = null;
-        }
-        statusElem.textContent = "Tap 'Start Scanner' to scan next item.";
-      } catch (err) {
-        console.error("Stop error:", err);
-      }
-    });
-    if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("service-worker.js")
-        .then((reg) => console.log("Service Worker Registered", reg))
-        .catch(() => console.warn("Service worker registration failed"));
-    }
-    window.addEventListener("beforeinstallprompt", (e) => {
-      e.preventDefault();
-      const installBtn = document.createElement("button");
-      installBtn.textContent = "📲 Install App";
-      Object.assign(installBtn.style, {
-        position:"fixed",
-        bottom:"80px",
-        left:"50%",
-        transform:"translateX(-50%)",
-        background:"#00b894",
-        color:"#fff",
-        border:"none",
-        borderRadius:"6px",
-        padding:"10px 20px",
-        fontSize:"16px",
-        cursor:"pointer",
-        zIndex:"9999"
-      });
-      document.body.appendChild(installBtn);
-      installBtn.addEventListener("click", async () => {
-        installBtn.remove();
-        e.prompt();
-        const choice = await e.userChoice;
-        if (choice.outcome === "accepted") showNotification("✅ App installed!");
-        else showNotification("ℹ️ Installation cancelled");
-      });
-    });
-    updateScanDisplay();
-  </script>
-</body>
-</html>
+      currentS

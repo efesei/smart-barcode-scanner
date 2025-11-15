@@ -1,187 +1,214 @@
 # Deft Barcode Scanner
 
-A powerful **Progressive Web App (PWA)** for real-time barcode and QR code scanning with advanced webhook integration. Built with modern web technologies and optimized for mobile devices.
+Advanced barcode and QR code scanner with batch scanning mode, offline support, and PWA capabilities.
 
-![PWA Ready](https://img.shields.io/badge/PWA-Ready-blue)
-![Browser Support](https://img.shields.io/badge/Browser-Chrome%20%7C%20Firefox%20%7C%20Safari%20%7C%20Edge-green)
+## 📁 Project Structure
 
----
+```
+barcode-scanner/
+├── index.html           ← Main application file
+├── manifest.json        ← PWA configuration
+├── service-worker.js    ← Offline support & caching
+├── icon-72.png          ← App icon (72x72)
+├── icon-96.png          ← App icon (96x96)
+├── icon-128.png         ← App icon (128x128)
+├── icon-144.png         ← App icon (144x144)
+├── icon-152.png         ← App icon (152x152)
+├── icon-192.png         ← App icon (192x192) - REQUIRED
+├── icon-384.png         ← App icon (384x384)
+├── icon-512.png         ← App icon (512x512) - REQUIRED
+└── README.md            ← This file
+```
 
-## Overview
+## 🚀 Quick Start
 
-**Deft Barcode Scanner** is a responsive web application for real-time barcode and QR code scanning directly in the browser. Powered by the **html5-qrcode** library, it delivers fast dense-QR detection, smooth performance, and reliable scanning across devices with camera support.
+### 1. **Create Project Folder**
+```bash
+mkdir barcode-scanner
+cd barcode-scanner
+```
 
----
+### 2. **Add Files**
+Copy the following files from the artifacts:
+- `index.html`
+- `manifest.json`
+- `service-worker.js`
 
-## Features
+### 3. **Create App Icons**
 
-- 📱 **Real-time Scanning** – Instant detection with optimized performance  
-- 🔗 **Webhook Integration** – Auto-send scanned data to your endpoint  
-- 📚 **Webhook History** – Save & reuse up to 10 URLs  
-- 🎯 **Multi-Format Support** – 1D + 2D barcode formats  
-- 📲 **PWA Support** – Install as a mobile app  
-- 💾 **Local Storage** – Persistent settings  
-- 📱 **Mobile Optimized** – Fully responsive  
-- 🔊 **Audio Feedback** – Beep on successful scans  
-- 🌐 **Online/Offline Status** – Live connectivity monitoring  
-- ⚙️ **Camera Optimization** – Prefers back/environment camera  
+You need to create PNG icons in these sizes:
+- **icon-192.png** (192x192) - REQUIRED
+- **icon-512.png** (512x512) - REQUIRED
+- Optional: 72, 96, 128, 144, 152, 384
 
----
+**Quick Icon Creation Options:**
 
-## Supported Formats
+**Option A: Use an Icon Generator (Recommended)**
+1. Go to https://realfavicongenerator.net/ or https://www.pwabuilder.com/imageGenerator
+2. Upload a logo/image (minimum 512x512)
+3. Download all generated icons
+4. Place them in your project folder
 
-### 2D Codes
-- QR Code  
-- Data Matrix  
-- Aztec  
-- PDF417  
+**Option B: Use a Simple Placeholder**
+Create a simple colored square as a temporary icon:
+- Any image editor (Paint, Photoshop, GIMP)
+- Create 512x512 blue square with white barcode icon
+- Export as PNG
+- Resize to create other sizes
 
-### 1D Linear Barcodes
-- UPC-A/E  
-- EAN-8/13  
-- Code 128  
-- Code 39  
+**Option C: Use Online Tools**
+- Canva: https://www.canva.com/ (free templates)
+- Figma: https://www.figma.com/ (design tool)
+- Photopea: https://www.photopea.com/ (online Photoshop)
 
----
+### 4. **Test Locally**
 
-## Quick Start
+**Option A: Using Python**
+```bash
+# Python 3
+python -m http.server 8000
 
-### Configure Settings (Optional)
-1. Open **Settings**  
-2. Enter your **Webhook URL**  
-3. Click **💾 Save Settings**
+# Then open: http://localhost:8000
+```
 
-### Start Scanning
-1. Tap **📷 Start Scanner**  
-2. Point the camera at the barcode/QR code  
-3. View results under **Current Scan**
+**Option B: Using Node.js**
+```bash
+# Install http-server globally
+npm install -g http-server
 
-### Webhook History
-- Click the webhook input to view past URLs  
-- Select from up to **10 saved entries**
+# Run server
+http-server -p 8000
 
----
+# Then open: http://localhost:8000
+```
 
-## Optimal Scanning Tips
+**Option C: Using VS Code Extension**
+1. Install "Live Server" extension
+2. Right-click `index.html`
+3. Select "Open with Live Server"
 
-**For Dense QR Codes**
-- Distance: 6–10 inches  
-- Lighting: Bright, even lighting  
-- Steady: Hold still 2–3 seconds  
-- Angle: Keep device flat and parallel  
-- Fill Frame: QR code should fill most of the camera view  
+### 5. **Deploy to GitHub Pages**
 
-**General**
-- Well-lit environment  
-- 4–12 inches from code  
-- Avoid extreme angles  
-- Keep device steady  
+```bash
+# Initialize git
+git init
+git add .
+git commit -m "Initial commit"
 
----
+# Create repo on GitHub, then:
+git remote add origin https://github.com/yourusername/barcode-scanner.git
+git branch -M main
+git push -u origin main
 
-## Camera Requirements
+# Enable GitHub Pages:
+# Settings → Pages → Source: main branch → Save
+```
 
-**Minimum**
-- 720p resolution  
-- Auto-focus  
-- Modern browser  
+Your app will be live at: `https://yourusername.github.io/barcode-scanner/`
 
-**Recommended**
-- 1080p or higher  
-- Continuous auto-focus  
-- Optical image stabilization  
+## ✨ Features
 
----
+### Single Scan Mode
+- Scan one barcode/QR code at a time
+- Camera stops after each scan
+- Immediate webhook delivery
 
-## Webhook Configuration
+### Batch Scan Mode
+- Continuous scanning
+- Accumulate multiple items
+- Duplicate detection (5-second cooldown)
+- Send individually or as batch
+- Persistent storage (survives refresh)
 
-### Data Format
+### PWA Features
+- Install as app on mobile/desktop
+- Works offline
+- Fast loading (cached)
+- Fullscreen experience
+
+## 🔧 Configuration
+
+### Webhook Setup
+1. Enter your webhook URL in Settings
+2. Choose send method (Individual or Batch)
+3. Click "Save Settings"
+
+### Webhook Payload Format
+
+**Single Scan:**
 ```json
 {
-  "barcode_data": "scanned_data_here",
-  "timestamp": "2025-01-01T12:00:00.000Z",
-  "scanned_at": "2025-01-01T12:00:00.000Z",
+  "barcode_data": "123456789",
+  "timestamp": "2025-01-15T10:30:00.000Z",
+  "scanned_at": "2025-01-15T10:30:00.000Z",
   "code_type": "QR_CODE"
 }
+```
 
-HTTP Request
-Method: POST
-Content-Type: application/json
-Endpoint: Your configured webhook URL
+**Batch (when "Send All as Single Batch"):**
+```json
+{
+  "batch": [
+    {
+      "barcode_data": "123456789",
+      "timestamp": "2025-01-15T10:30:00.000Z",
+      "code_type": "QR_CODE",
+      "sent": false
+    }
+  ],
+  "batch_size": 1,
+  "completed_at": "2025-01-15T10:31:00.000Z"
+}
+```
 
-Webhook History
-Auto-saves up to 10 recent URLs
-Accessible by clicking the input field
+## 📱 Supported Barcode Formats
 
-Performance
-Metric	Value
-Scan Speed	1–3 seconds
-Success Rate	90%+ (ideal conditions)
-Camera Startup	1–2 seconds
-History Limit	10 URLs
-Supported Formats	10+ barcode types
+- QR Code
+- Data Matrix
+- Aztec
+- PDF 417
+- EAN-13
+- EAN-8
+- Code 128
+- Code 39
+- UPC-A
+- UPC-E
 
-Technical Details
-Browser Support
-Chrome 60+
-Safari 11+
-Firefox 55+
-Edge 79+
+## 🔒 Requirements
 
-Dependencies
-html5-qrcode
-Native Web APIs (camera, localStorage, AudioContext)
-PWA (service worker, manifest)
+- **HTTPS** (required for camera access)
+- Modern browser (Chrome, Firefox, Safari, Edge)
+- Camera permission
 
-Storage
-Webhook URLs: localStorage
-Webhook History: localStorage (10 entries)
-Scan Data: session only
-Settings: persistent
+## 🐛 Troubleshooting
 
-Troubleshooting
-Camera Access Denied
-Check browser permissions
-Refresh the page
+### Camera Not Working
+1. Check browser address bar for camera permission
+2. Ensure URL starts with `https://`
+3. Try different browser
+4. Restart browser completely
 
-Scanner Won’t Start
-Ensure no other app is using camera
-Try another browser
+### App Won't Install
+1. Must be served over HTTPS
+2. Ensure `manifest.json` and icons exist
+3. Check browser console for errors
 
-Delay Before Camera Opens
-App includes 1-second initial scan protection (normal behavior)
+### Offline Not Working
+1. Check `service-worker.js` is registered (console logs)
+2. Clear browser cache and reload
+3. Check Application → Service Workers in DevTools
 
-No Sound
-Check volume / silent mode
-Some browsers require user interaction first
+## 📄 License
 
-Webhook Not Sending
-Check internet connection
-Validate URL & CORS
-Ensure endpoint accepts POST JSON
+Copyright © 2025 Deftmind Technology and Media Ventures
 
-Technical Architecture
-Library Info
-Powered by html5-qrcode
-Optional BarcodeDetector API support
-30 FPS scanning, optimized for QR codes
+## 🤝 Support
 
-Project Structure
-pgsql
-Copy code
-deft-barcode-scanner/
-├── index.html
-├── manifest.json
-└── service-worker.js
+For issues or questions, please open an issue on GitHub.
 
-Key Features
-1-second scan protection
-Automatic back-camera selection
-Robust permission/error handling
-Optimized for dense QR codes
+---
 
-License
-© 2025 Deftmind Technology and Media Ventures
-
-Support
-For support, feature requests, or bug reports, contact Deftmind Technology and Media Ventures.
+**Built with:**
+- [html5-qrcode](https://github.com/mebjas/html5-qrcode) - QR code scanning library
+- Progressive Web App technologies
+- Vanilla JavaScript (no frameworks)
