@@ -852,4 +852,311 @@
     }
     
     function clearScanData() {
-      currentS
+      currentScanData = null;
+      updateScanDisplay();
+      showNotification("Scan data cleared");
+    }
+    
+    if ("Notification" in window && Notification.permission === "default") {
+      Notification.requestPermission();
+    }
+    
+    function showNotification(message, isError = false) {
+      console.log("Notification:", message);
+      
+      if ("Notification" in window && Notification.permission === "granted") {
+        try {
+          new Notification("Deft Barcode Scanner", {
+            body: message
+          });
+        } catch (e) {
+          console.log("Browser notification failed:", e);
+        }
+      }
+      
+      const notif = document.createElement("div");
+      notif.className = "notification" + (isError ? " error" : "");
+      notif.textContent = message;
+      document.body.appendChild(notif);
+      setTimeout(() => {
+        notif.remove();
+      }, 3000);
+    }
+    
+    function updateOnlineStatus() {
+      onlineStatus.className = "status-indicator " + (navigator.onLine ? "online" : "offline");
+    }
+    updateOnlineStatus();
+    window.addEventListener("online", updateOnlineStatus);
+    window.addEventListener("offline", updateOnlineStatus);
+    
+    webhookUrlInput.value = webhookUrl;
+    initWebhookHistory();
+    
+    saveSettingsBtn.addEventListener("click", () => {
+      const newUrl = webhookUrlInput.value.trim();
+      webhookUrl = newUrl;
+      localStorage.setItem("webhookUrl", newUrl);
+      sendMethod = sendMethodSelect.value;
+      localStorage.setItem("sendMethod", sendMethod);
+      addToWebhookHistory(newUrl);
+      
+      console.log("Settings saved - Webhook URL:", newUrl);
+      console.log("Settings saved - Send method:", sendMethod);
+      
+      showNotification("✅ Settings saved!");
+    });
+    
+    clearScanBtn.addEventListener("click", clearScanData);
+    
+    async function sendScanData(scanData) {
+      if (!navigator.onLine || !webhookUrl) return;
+      try {
+        const payload = {
+          barcode_data: scanData.barcode_data,
+          timestamp: scanData.timestamp,
+          scanned_at: scanData.timestamp,
+          code_type: scanData.code_type || "QR_CODE"
+        };
+        console.log("Sending to webhook:", JSON.stringify(payload, null, 2));
+        const res = await fetch(webhookUrl, {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify(payload)
+        });
+        console.log("Webhook response:", res.status, res.statusText);
+        if (res.ok) {
+          showNotification("✅ Data sent to webhook!");
+        } else {
+          showNotification("⚠️ Webhook error: " + res.status, true);
+        }
+      } catch (err) {
+        console.error("Send error:", err);
+        showNotification("⚠️ Failed to send data", true);
+      }
+    }
+    
+    async function onScanSuccess(decodedText, decodedResult) {
+      if (!scanning || !scanReady) return;
+      console.log("Scan successful:", decodedText);
+      console.log("Format:", decodedResult.result.format);
+      const codeType = decodedResult.result.format?.formatName || "QR_CODE";
+      
+      if (isDuplicate(decodedText)) {
+        console.log("Duplicate scan detected:", decodedText);
+        playBeep(true);
+        duplicateIndicator.classList.add("show");
+        setTimeout(() => {
+          duplicateIndicator.classList.remove("show");
+        }, 2000);
+        if (scanMode === "single") {
+          scanning = false;
+          stopBtn.click();
+        }
+        return;
+      }
+      
+      playBeep(false);
+      const data = {
+        barcode_data: decodedText,
+        timestamp: new Date().toISOString(),
+        code_type: codeType,
+        sent: false
+      };
+      
+      if (scanMode === "batch") {
+        batchItems.push(data);
+        localStorage.setItem("batchItems", JSON.stringify(batchItems));
+        updateBatchDisplay();
+        statusElem.textContent = `✅ Added to batch! (${batchItems.length} items) - Keep scanning...`;
+        showNotification(`✅ Item ${batchItems.length} added to batch!`);
+        currentScanData = decodedText;
+        updateScanDisplay();
+      } else {
+        scanning = false;
+        stopBtn.click();
+        statusElem.textContent = `✅ Scan Complete! Type: ${codeType}`;
+        showNotification(`✅ ${codeType} Scanned!`);
+        currentScanData = decodedText;
+        updateScanDisplay();
+        if (navigator.onLine && webhookUrl) {
+          await sendScanData(data);
+        }
+        setTimeout(() => {
+          statusElem.textContent = "Tap 'Start Scanner' to scan next item.";
+        }, 2000);
+      }
+    }
+    
+    function onScanError(errorMessage) {
+      if (!errorMessage.includes("NotFoundException")) {
+        console.warn("Scan error:", errorMessage);
+      }
+    }
+    
+    startBtn.addEventListener("click", async () => {
+      console.log("Start button clicked");
+      
+      if (scanning) {
+        console.log("Already scanning, ignoring click");
+        return;
+      }
+      
+      // Make webhook optional for testing
+      if (!webhookUrl) {
+        console.warn("No webhook URL configured");
+        showNotification("⚠️ Warning: No webhook URL configured. Scans won't be sent.", true);
+        // Continue anyway for testing
+      }
+      
+      if (scanMode === "single") {
+        clearScanData();
+      }
+      
+      scanning = true;
+      scanReady = false;
+      startBtn.style.display = "none";
+      stopBtn.style.display = "inline-block";
+      statusElem.textContent = "Starting scanner...";
+      
+      console.log("Initializing camera...");
+      
+      try {
+        html5QrCode = new Html5Qrcode("reader");
+        let cameras;
+        
+        try {
+          console.log("Getting cameras...");
+          cameras = await Html5Qrcode.getCameras();
+          console.log("Available cameras:", cameras);
+          
+          if (!cameras || cameras.length === 0) {
+            throw new Error("No cameras found on device");
+          }
+        } catch (cameraError) {
+          console.error("Camera enumeration error:", cameraError);
+          throw new Error("Cannot access camera. Please check browser permissions");
+        }
+        
+        const config = {
+          fps: 30,
+          qrbox: { width: 300, height: 300 },
+          aspectRatio: 1.0,
+          formatsToSupport: [
+            Html5QrcodeSupportedFormats.QR_CODE,
+            Html5QrcodeSupportedFormats.DATA_MATRIX,
+            Html5QrcodeSupportedFormats.AZTEC,
+            Html5QrcodeSupportedFormats.PDF_417,
+            Html5QrcodeSupportedFormats.EAN_13,
+            Html5QrcodeSupportedFormats.EAN_8,
+            Html5QrcodeSupportedFormats.CODE_128,
+            Html5QrcodeSupportedFormats.CODE_39,
+            Html5QrcodeSupportedFormats.UPC_A,
+            Html5QrcodeSupportedFormats.UPC_E
+          ],
+          experimentalFeatures: {
+            useBarCodeDetectorIfSupported: true
+          }
+        };
+        
+        let cameraId = { facingMode: "environment" };
+        if (cameras && cameras.length > 0) {
+          const backCamera = cameras.find(cam =>
+            cam.label && (cam.label.toLowerCase().includes('back') ||
+                         cam.label.toLowerCase().includes('environment') ||
+                         cam.label.toLowerCase().includes('rear'))
+          );
+          cameraId = backCamera ? backCamera.id : cameras[0].id;
+          console.log("Using camera:", cameraId);
+        }
+        
+        console.log("Starting camera with config:", config);
+        await html5QrCode.start(cameraId, config, onScanSuccess, onScanError);
+        
+        permissionHelp.classList.remove("show");
+        statusElem.textContent = "📷 Camera initializing...";
+        console.log("Camera started, waiting for stabilization...");
+        
+        setTimeout(() => {
+          scanReady = true;
+          if (scanMode === "batch") {
+            statusElem.textContent = `📷 Batch mode active. Point at items to scan... (${batchItems.length} items)`;
+          } else {
+            statusElem.textContent = "📷 Camera ready. Point at QR code or barcode...";
+          }
+          console.log("Scanner ready!");
+        }, 1000);
+        
+      } catch (err) {
+        console.error("Camera error:", err);
+        statusElem.textContent = "❌ Camera access denied or unavailable.";
+        showNotification("⚠️ Camera access failed: " + err.message, true);
+        permissionHelp.classList.add("show");
+        scanning = false;
+        scanReady = false;
+        startBtn.style.display = "inline-block";
+        stopBtn.style.display = "none";
+      }
+    });
+    
+    stopBtn.addEventListener("click", async () => {
+      if (!scanning && !html5QrCode) return;
+      scanning = false;
+      scanReady = false;
+      startBtn.style.display = "inline-block";
+      stopBtn.style.display = "none";
+      try {
+        if (html5QrCode) {
+          await html5QrCode.stop();
+          html5QrCode.clear();
+          html5QrCode = null;
+        }
+        if (scanMode === "batch") {
+          statusElem.textContent = `Scanning paused. ${batchItems.length} items in batch. Tap 'Start Scanner' to continue.`;
+        } else {
+          statusElem.textContent = "Tap 'Start Scanner' to scan next item.";
+        }
+      } catch (err) {
+        console.error("Stop error:", err);
+      }
+    });
+    
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("service-worker.js")
+        .then((reg) => console.log("Service Worker Registered", reg))
+        .catch(() => console.warn("Service worker registration failed"));
+    }
+    
+    window.addEventListener("beforeinstallprompt", (e) => {
+      e.preventDefault();
+      const installBtn = document.createElement("button");
+      installBtn.textContent = "📲 Install App";
+      Object.assign(installBtn.style, {
+        position:"fixed",
+        bottom:"80px",
+        left:"50%",
+        transform:"translateX(-50%)",
+        background:"#00b894",
+        color:"#fff",
+        border:"none",
+        borderRadius:"6px",
+        padding:"10px 20px",
+        fontSize:"16px",
+        cursor:"pointer",
+        zIndex:"9999"
+      });
+      document.body.appendChild(installBtn);
+      installBtn.addEventListener("click", async () => {
+        installBtn.remove();
+        e.prompt();
+        const choice = await e.userChoice;
+        if (choice.outcome === "accepted") showNotification("✅ App installed!");
+        else showNotification("ℹ️ Installation cancelled");
+      });
+    });
+    
+    updateScanDisplay();
+    initMode();
+  </script>
+</body>
+</html>
