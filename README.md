@@ -9,14 +9,9 @@ barcode-scanner/
 ├── index.html           ← Main application file
 ├── manifest.json        ← PWA configuration
 ├── service-worker.js    ← Offline support & caching
-├── icon-72.png          ← App icon (72x72)
 ├── icon-96.png          ← App icon (96x96)
-├── icon-128.png         ← App icon (128x128)
-├── icon-144.png         ← App icon (144x144)
-├── icon-152.png         ← App icon (152x152)
-├── icon-192.png         ← App icon (192x192) - REQUIRED
-├── icon-384.png         ← App icon (384x384)
-├── icon-512.png         ← App icon (512x512) - REQUIRED
+├── icon-192.png         ← App icon (192x192)
+├── icon-512.png         ← App icon (512x512) 
 └── README.md            ← This file
 ```
 
