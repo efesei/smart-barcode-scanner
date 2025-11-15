@@ -1,6 +1,6 @@
 {
   "name": "Deft Barcode & QR Scanner",
-  "short_name": "Deft Barcode Scanner",
+  "short_name": "Deft Scanner",
   "description": "Advanced barcode and QR code scanner with batch scanning mode, offline support, and webhook integration",
   "start_url": "/",
   "scope": "/",
